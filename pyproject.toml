@@ -1,0 +1,130 @@
+[project]
+name = "nwec"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+license = {text = "MIT License"}
+authors = [
+	{name = "Peter Mason", email = "peter@petermason.me"},
+]
+classifiers = [
+	"MIT License: License :: OSI Approved :: MIT License",
+	"Programming Language :: Python :: 3",
+	"Natural Language :: English",
+]
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastexcel>=0.11.6",
+    "nwec",
+    "pandas>=2.2.2",
+    "polars>=1.6.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "creosote>=3.0.2",
+    "ipykernel>=6.29.5",
+    "pre-commit>=3.8.0",
+    "pytest>=8.3.2",
+    "ruff>=0.6.3",
+]
+
+[tool.setuptools]
+packages = ["nwec"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "F",        # pyflakes
+    "E",        # pycodestyle (errors)
+    "W",        # pycodestyle (warnings)
+    "C90",      # mccabe complexity
+    "I",        # isort
+    "N",        # pep8-naming
+    "D",        # pydocstyle
+    "UP",       # pyupgrade
+    "YTT",      # flake8-2020
+    "ANN",      # flake8-annotations
+    "ASYNC",    # flake8-async
+    "S",        # flake8-bandit
+    "BLE",      # flake8-blind-except
+    "B",        # flake8-bugbear
+    "A",        # flake8-builtins
+    "C4",       # flake8-comprehensions
+    "DTZ",      # flake8-datetimez
+    "T10",      # flake8-debugger
+    "ISC",      # flake8-implicit-str-concat
+    "ICN",      # flake8-import-conventions
+    "LOG",      # flake8-logging
+    "G",        # flake8-logging-format
+    "INP",      # flake8-no-pep420
+    "PYI",      # flake8-pyi
+    "PT",       # flake8-pytest-style
+    "Q",        # flake8-quotes
+    "RSE",      # flake8-raise
+    "RET",      # flake8-return
+    "SLF",      # flake8-self
+    "SIM",      # flake8-simplify
+    "TID",      # flake8-tidy-imports
+    "TCH",      # flake8-type-checking
+    "ARG",      # flake8-unused-arguments
+    "PTH",      # flake8-use-pathlib
+    "TD",       # flake8-todos
+    "FIX",      # flake8-fixme
+    "PD",       # pandas-vet
+    "PL",       # pylint
+    "TRY",      # tryceratops
+    "FLY",      # flynt
+    "NPY",      # numpy-specific rules
+    "FURB",     # refurb
+    "RUF",      # ruff-specific rules
+]
+ignore = [
+    "ANN101",   # Missing type annotations for `self` methods
+    "D203",     # Class docstring is missing a blank line after (Alternative to D211)
+    "D213",     # Docstring summary is not on the second line of the docstring (Alternative to D212)
+    "FIX002",   # Line contains "TODO"
+    "G004",     # Logging statement uses f-string
+    "ISC001",   # Conflicts with ruff's formatter
+    "PD901",    # Usage of `df` for DataFrame variable names
+    "S101",     # Usage of assert statements
+    "S603",     # Subprocess call without validated input
+    "S607",     # Subprocess call with partial executable path
+    "TD002",    # Check that TODO comments have authors mentioned
+    "TRY002",   # Create your own exception class
+    "TRY003",   # Avoid specifying long messages outsdie of the exception class
+]
+unfixable = [
+    "F401"      # Remove unused imports
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D104", "F401"]
+"docs/conf.py" = ["INP001"]
+"tests/*" = ["ANN201", "INP001"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["copyright"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.creosote]
+venvs = [".venv"]
+paths = ["nwec", "tests"]
+deps-file = "pyproject.toml"
+sections = ["project.dependencies"]
+exclude-deps =[
+  "polars",
+  "pandas",
+  "fastexcel",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
