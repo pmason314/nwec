@@ -1,4 +1,4 @@
-"""Collection of utility functions for the NWEC package."""
+"""Collection of general utility functions for the NWEC package."""
 
 import subprocess
 from pathlib import Path
