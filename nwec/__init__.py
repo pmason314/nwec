@@ -1,1 +1,1 @@
-"""Brief description or summary of your Python package."""
+"""A collection of notebooks and scripts for data analysis for the Northwest Energy Coalition."""
