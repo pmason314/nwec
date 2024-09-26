@@ -16,7 +16,7 @@ Volunteer data analysis, pipeline automation, and scripting done for the Northwe
     ```
 4. Create the project's virtual environment:
    ```
-    uv venv --python-preference only-managed
+    uv venv --python-preference=only-managed
    ```
 5. Install the project's dependencies:
     ```
