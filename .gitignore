@@ -157,3 +157,11 @@ cython_debug/
 
 # Scratch files
 **/scratch.*
+
+# Everything in data/ except for instructions
+data/*
+!data/utility_reporting
+data/utility_reporting/*
+!data/utility_reporting/raw
+data/utility_reporting/raw/*
+!data/utility_reporting/raw/README.md

@@ -26,6 +26,7 @@ dependencies = [
 ]
 
 [tool.uv]
+package = true
 dev-dependencies = [
     "creosote>=3.0.2",
     "ipykernel>=6.29.5",
