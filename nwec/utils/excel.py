@@ -33,13 +33,9 @@ def find_unpromoted_header(
             clean_target_string = (
                 str(df.item(y, x)).lower().replace("(", "").replace(")", "").replace("-", " ").replace("_", " ").strip()
             )
-            if (
-                exact_match
-                and search_string == clean_target_string
-                or (
-                    not exact_match and search_string in clean_target_string
-                    # and abs(len(search_string) - len(clean_target_string)) < 5
-                )
+            if (exact_match and search_string == clean_target_string) or (
+                not exact_match and search_string in clean_target_string
+                # and abs(len(search_string) - len(clean_target_string)) < 5
             ):
                 return y, x
     raise ValueError(f"'{search_string}' not found in the first {search_y} rows and {search_x} columns of DataFrame.")

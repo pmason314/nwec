@@ -8,7 +8,7 @@ authors = [
     { name = "Peter Mason", email = "peter@petermason.me" },
 ]
 classifiers = [
-    "MIT License: License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Natural Language :: English",
 ]
@@ -25,17 +25,23 @@ dependencies = [
     "seaborn>=0.13.2",
 ]
 
-[tool.uv]
-package = true
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "creosote>=3.0.2",
     "ipykernel>=6.29.5",
     "pre-commit>=3.8.0",
     "pytest>=8.3.2",
-    "ruff>=0.6.3",
+    "ruff>=0.8.1",
 ]
 
-[tool.setuptools]
+[tool.uv]
+package = true
+
+[build-system]
+requires      = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
 packages = ["nwec"]
 
 [tool.ruff]
@@ -74,7 +80,7 @@ select = [
     "SLF",   # flake8-self
     "SIM",   # flake8-simplify
     "TID",   # flake8-tidy-imports
-    "TCH",   # flake8-type-checking
+    "TC",    # flake8-type-checking
     "ARG",   # flake8-unused-arguments
     "PTH",   # flake8-use-pathlib
     "TD",    # flake8-todos
@@ -88,7 +94,6 @@ select = [
     "RUF",   # ruff-specific rules
 ]
 ignore = [
-    "ANN101",  # Missing type annotations for `self` methods
     "D203",    # Class docstring is missing a blank line after (Alternative to D211)
     "D213",    # Docstring summary is not on the second line of the docstring (Alternative to D212)
     "FIX002",  # Line contains "TODO"
