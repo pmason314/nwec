@@ -51,7 +51,9 @@ def download_latest(
         xlsx_report_download = requests.get(download_link, timeout=20)
         xlsx_report_download.raise_for_status()
 
-        with Path(RAW_UTILITY_DATA / "downloads" / f"{utility_company.code}_{report_file_name}").open("wb") as file:
+        output_dir = Path(RAW_UTILITY_DATA / "downloads")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        with Path(output_dir / f"{utility_company.code}_{report_file_name}").open("wb") as file:
             file.write(xlsx_report_download.content)
         print(
             f"Downloaded {utility_company.code}_{report_file_name} for {utility_company.full_name} "
@@ -73,11 +75,14 @@ def rename_downloads(cutoff_date: date | None = None) -> None:
     if cutoff_date is None:
         cutoff_date = datetime.now(tz=UTC).date()
     quarter, year = get_previous_quarter(cutoff_date)
+
+    output_dir = Path(RAW_UTILITY_DATA / str(year))
+    output_dir.mkdir(parents=True, exist_ok=True)
     for file in Path(RAW_UTILITY_DATA / "downloads").iterdir():
         if file.is_file():
             utility = file.name.split("_")[0]
 
-            file.rename(RAW_UTILITY_DATA / str(year) / f"{utility}_{year}_Q{quarter}{file.suffix}")
+            file.rename(output_dir / f"{utility}_{year}_Q{quarter}{file.suffix}")
 
 
 # TODO: Need additional checks for PacifiCorp (need to rely on file name to tell if it's a quarterly or monthly report)
