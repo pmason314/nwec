@@ -77,7 +77,9 @@ def rename_downloads(cutoff_date: date | None = None) -> None:
         if file.is_file():
             utility = file.name.split("_")[0]
 
-            file.rename(RAW_UTILITY_DATA / str(year) / f"{utility}_{year}_Q{quarter}.{file.suffix}")
+            file.rename(RAW_UTILITY_DATA / str(year) / f"{utility}_{year}_Q{quarter}{file.suffix}")
 
 
-rename_downloads(date(2025, 1, 1))
+# TODO: Need additional checks for PacifiCorp (need to rely on file name to tell if it's a quarterly or monthly report)
+# TODO: PSE is also wrong since they name their files inconsistently
+# Maybe download all files in the date range and keep the largest?

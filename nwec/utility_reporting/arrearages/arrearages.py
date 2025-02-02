@@ -5,6 +5,7 @@ import datetime
 import polars as pl
 
 import nwec.utils.excel
+from nwec.constants import CLEAN_UTILITY_DATA, Utility
 
 
 def normalize_zip_class_cols(source_df: pl.DataFrame, arrearages_df: pl.DataFrame) -> pl.DataFrame:
@@ -188,3 +189,35 @@ def normalize_arrearage_cols(arrearages_df: pl.DataFrame, num_months: int) -> pl
     )
     arrearages_df = arrearages_df.cast({"Year": pl.Int32, "Month": pl.Int32, "Vintage": pl.Int32})
     return arrearages_df.with_columns(pl.col("Amount").fill_null(0))
+
+
+def save_processed_arrearages(
+    arrearages: pl.DataFrame,
+    kli_arrearages: pl.DataFrame,
+    num_months: int,
+    utility: Utility,
+    year: int,
+    quarter: int,
+) -> None:
+    """Save the arrearages DataFrame to a CSV file.
+
+    Args:
+        arrearages (pl.DataFrame): The residential arrearages DataFrame.
+        kli_arrearages (pl.DataFrame): The KLI arrearages DataFrame.
+        num_months (int): The number of months with data in `arrearages` and `kli_arrearages`.
+        utility (Utility): The utility company for which the arrearages data is being processed.
+        year (int): The year of the arrearages data.
+        quarter (int): The quarter of the arrearages data.
+    """
+    arrearages = normalize_arrearage_cols(arrearages, num_months)
+    arrearages = arrearages.with_columns(pl.lit(utility.full_name).alias("Utility"))
+    arrearages = arrearages.with_columns(pl.lit("Residential").alias("Customer Class"))
+
+    kli_arrearages = normalize_arrearage_cols(kli_arrearages, num_months)
+    kli_arrearages = kli_arrearages.with_columns(pl.lit(utility.full_name).alias("Utility"))
+    kli_arrearages = kli_arrearages.with_columns(pl.lit("KLI").alias("Customer Class"))
+
+    output_dir = CLEAN_UTILITY_DATA / str(year)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    pl.concat([arrearages, kli_arrearages]).write_ipc(output_dir / f"{utility.code}_{year}_Q{quarter}.arrow")
+    pl.concat([arrearages, kli_arrearages]).write_csv(output_dir / f"{utility.code}_{year}_Q{quarter}.csv")
