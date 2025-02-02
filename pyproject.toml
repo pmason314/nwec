@@ -15,6 +15,7 @@ classifiers = [
 requires-python = ">=3.12"
 
 dependencies = [
+    "beautifulsoup4>=4.12.3",
     "fastexcel>=0.11.6",
     "nbformat>=5.10.4",
     "nwec",
@@ -22,6 +23,7 @@ dependencies = [
     "pandas>=2.2.2",
     "plotly>=5.24.1",
     "polars>=1.6.0",
+    "requests>=2.32.3",
     "seaborn>=0.13.2",
 ]
 
@@ -94,6 +96,7 @@ select = [
     "RUF",   # ruff-specific rules
 ]
 ignore = [
+    "D107",    # Public __init__ method is missing a docstring
     "D203",    # Class docstring is missing a blank line after (Alternative to D211)
     "D213",    # Docstring summary is not on the second line of the docstring (Alternative to D212)
     "FIX002",  # Line contains "TODO"

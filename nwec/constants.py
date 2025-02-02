@@ -1,6 +1,23 @@
 """Constants for the NWEC package."""
 
+from enum import Enum
+
 import nwec.utils
+
+
+class Utility(Enum):
+    """List of utility companies participating in the disconnection moratorium."""
+
+    AVISTA = ("Avista Corporation", "avista")
+    CNG = ("Cascade Natural Gas Corporation", "cng")
+    NWNG = ("Northwest Natural Gas Company", "nwng")
+    PAC = ("PacifiCorp", "pac")
+    PSE = ("Puget Sound Energy", "pse")
+
+    def __init__(self, full_name: str, code: str) -> None:
+        self.full_name = full_name
+        self.code = code
+
 
 PROJECT_ROOT = nwec.utils.get_project_root()
 DATA = PROJECT_ROOT / "data"
