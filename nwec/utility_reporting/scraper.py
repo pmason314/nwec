@@ -1,3 +1,5 @@
+"""Functions to scrape the UTC docket for the latest utility reports."""
+
 import re
 import warnings
 from collections.abc import Iterable
@@ -88,3 +90,4 @@ def rename_downloads(cutoff_date: date | None = None) -> None:
 # TODO: Need additional checks for PacifiCorp (need to rely on file name to tell if it's a quarterly or monthly report)
 # TODO: PSE is also wrong since they name their files inconsistently
 # Maybe download all files in the date range and keep the largest?
+rename_downloads()

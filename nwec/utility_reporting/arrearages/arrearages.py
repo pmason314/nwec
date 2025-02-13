@@ -219,5 +219,5 @@ def save_processed_arrearages(
 
     output_dir = CLEAN_UTILITY_DATA / str(year)
     output_dir.mkdir(parents=True, exist_ok=True)
-    pl.concat([arrearages, kli_arrearages]).write_ipc(output_dir / f"{utility.code}_{year}_Q{quarter}.arrow")
-    pl.concat([arrearages, kli_arrearages]).write_csv(output_dir / f"{utility.code}_{year}_Q{quarter}.csv")
+    pl.concat([arrearages, kli_arrearages]).write_ipc(output_dir / f"{utility.code}_{year}_Q{quarter}_arrearages.arrow")
+    pl.concat([arrearages, kli_arrearages]).write_csv(output_dir / f"{utility.code}_{year}_Q{quarter}_arrearages.csv")
