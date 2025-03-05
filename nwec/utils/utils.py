@@ -1,8 +1,11 @@
 """Collection of general utility functions for the NWEC package."""
 
+import datetime
 import subprocess
 from datetime import date
 from pathlib import Path
+
+import dateutil.parser
 
 
 def get_project_root() -> Path:
@@ -24,3 +27,12 @@ def get_previous_quarter(input_date: date) -> tuple[int, int]:
     else:
         quarter = (month - 1) // 3
     return quarter, year
+
+
+def format_date(date: str, output_format: str = "YYYY-MM-DD", input_format: str | None = None) -> str:
+    """Format a date string in a chosen format."""
+    if input_format:
+        input_date = datetime.datetime.strptime(date, input_format).astimezone(datetime.UTC)
+    else:
+        input_date = dateutil.parser.parse(date)
+    return input_date.strftime(output_format)
