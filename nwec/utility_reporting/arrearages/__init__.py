@@ -1,6 +1,7 @@
 from nwec.utility_reporting.arrearages.arrearages import (
     add_zip_and_customer_class_cols,
     combine_arrearage_year_vintage_cols,
+    extrapolate_missing_months,
     get_arrearages_df,
     infer_customer_class_column,
     infer_date_row,

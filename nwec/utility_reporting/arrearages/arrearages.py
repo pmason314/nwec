@@ -231,12 +231,22 @@ def save_processed_arrearages(arrearages: pl.DataFrame, kli_arrearages: pl.DataF
     """
     CLEAN_UTILITY_DATA.mkdir(parents=True, exist_ok=True)
     arrearage_path = CLEAN_UTILITY_DATA / "arrearage_amounts.arrow"
+    kli_arrearage_path = CLEAN_UTILITY_DATA / "arrearage_amounts_kli.arrow"
 
     if arrearage_path.exists():
         combined_arrearages = pl.read_ipc(arrearage_path)
-        combined_arrearages = pl.concat([combined_arrearages, arrearages, kli_arrearages])
+        combined_arrearages = pl.concat([combined_arrearages, arrearages])
         combined_arrearages = combined_arrearages.unique()
     else:
-        combined_arrearages = pl.concat([arrearages, kli_arrearages])
+        combined_arrearages = arrearages
+    if kli_arrearage_path.exists():
+        kli_combined_arrearages = pl.read_ipc(kli_arrearage_path)
+        kli_combined_arrearages = pl.concat([kli_combined_arrearages, kli_arrearages])
+        kli_combined_arrearages = kli_combined_arrearages.unique()
+    else:
+        kli_combined_arrearages = kli_arrearages
+
     combined_arrearages.write_ipc(CLEAN_UTILITY_DATA / "arrearage_amounts.arrow")
     combined_arrearages.write_csv(CLEAN_UTILITY_DATA / "arrearage_amounts.csv")
+    kli_combined_arrearages.write_ipc(CLEAN_UTILITY_DATA / "arrearage_amounts_kli.arrow")
+    kli_combined_arrearages.write_csv(CLEAN_UTILITY_DATA / "arrearage_amounts_kli.csv")
