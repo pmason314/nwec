@@ -1,10 +1,21 @@
+"""Pipeline functions for calculating arrearage counts for residential customers."""
+
 import polars as pl
 
 from nwec.constants import CLEAN_UTILITY_DATA, Utility
 from nwec.utils import format_date
 
 
-def format_arrearage_count_dates(arrearages_df, source_date_format):
+def format_arrearage_count_dates(arrearages_df: pl.DataFrame, source_date_format: str) -> pl.DataFrame:
+    """Format the date columns in the arrearages DataFrame to be in the format "YYYY MM".
+
+    Args:
+        arrearages_df (pl.DataFrame): The arrearages DataFrame.
+        source_date_format (str): The format of the date columns in the source DataFrame, e.g. "%Y-%m-%d %H:%M:%S"
+
+    Returns:
+        pl.DataFrame: The arrearages DataFrame with the date columns formatted as "YYYY MM".
+    """
     months = arrearages_df.slice(0, 1).to_dicts()[0].values()
     new_date_columns = []
     for month in months:
@@ -15,7 +26,19 @@ def format_arrearage_count_dates(arrearages_df, source_date_format):
     return arrearages_df.rename(new_date_columns).tail(-1)
 
 
-def normalize_arrearage_count_cols(arrearages_df, utility):
+def normalize_arrearage_count_cols(arrearages_df: pl.DataFrame, utility: Utility) -> pl.DataFrame:
+    """Normalize the columns in the arrearages DataFrame.
+
+    Includes filtering out non-residential classes and
+    unpivoting the year and month columns.
+
+    Args:
+        arrearages_df (pl.DataFrame): The arrearages DataFrame.
+        utility (Utility): The utility company being processed.
+
+    Returns:
+        pl.DataFrame: The normalized arrearages DataFrame.
+    """
     arrearages_df = arrearages_df.filter(~pl.all_horizontal(pl.all().is_null()))
     arrearages_df = arrearages_df.filter(pl.col("Zip Code").is_not_null())
     arrearages_df = arrearages_df.filter(pl.col("Zip Code").str.len_chars() > 0)

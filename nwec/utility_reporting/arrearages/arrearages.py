@@ -84,7 +84,10 @@ def combine_arrearage_year_vintage_cols(
 
 
 def extrapolate_missing_months(months: list[str], num_months: int, source_date_format: str) -> list[str]:
-    """Extrapolate missing initial months in the arrearages DataFrame.  Assumes that the initial month(s) are missing."""
+    """Extrapolate missing initial months in the arrearages DataFrame.
+
+    Assumes that the initial month(s) are missing.
+    """
     date_months = [datetime.datetime.strptime(month, source_date_format).astimezone(datetime.UTC) for month in months]
     delta = date_months[1] - date_months[0]
     while len(date_months) < num_months:
