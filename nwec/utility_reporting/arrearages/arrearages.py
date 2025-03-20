@@ -121,13 +121,17 @@ def normalize_vintage_cols(arrearages_df: pl.DataFrame) -> pl.DataFrame:
     return arrearages_df
 
 
-def add_zip_and_customer_class_cols(spreadsheet_df: pl.DataFrame, arrearages_df: pl.DataFrame) -> pl.DataFrame:
+def add_zip_and_customer_class_cols(
+    spreadsheet_df: pl.DataFrame, arrearages_df: pl.DataFrame, start_col: int = 0
+) -> pl.DataFrame:
     """Add the ZIP code and customer class columns to the arrearages DataFrame."""
-    zip_column = spreadsheet_df.select(pl.nth(nwec.utils.excel.infer_zip_column(spreadsheet_df)))
+    zip_column = spreadsheet_df.select(pl.nth(nwec.utils.excel.infer_zip_column(spreadsheet_df, start_col=start_col)))
     zip_row = nwec.utils.excel.find_cell_by_string(zip_column, "zip")
     zip_column = zip_column.rename({zip_column.columns[0]: "Zip Code"}).tail(-(zip_row[0] + 1))
     zip_column = zip_column.with_columns(pl.col("Zip Code").str.strip_chars())
-    customer_class_column = spreadsheet_df.select(pl.nth(infer_customer_class_column(spreadsheet_df)))
+    customer_class_column = spreadsheet_df.select(
+        pl.nth(infer_customer_class_column(spreadsheet_df, start_col=start_col))
+    )
     customer_class_row = nwec.utils.excel.find_cell_by_string(customer_class_column, "class")
     customer_class_column = customer_class_column.rename({customer_class_column.columns[0]: "Customer Class"}).tail(
         -(customer_class_row[0] + 1)
@@ -167,13 +171,13 @@ def normalize_arrearage_cols(arrearages_df: pl.DataFrame, arrearage_type: str, u
     return arrearages_df.cast({"Year": pl.Int32, "Month": pl.Int32, "Vintage": pl.Int32, "Amount": pl.Float64})
 
 
-def infer_customer_class_column(df: pl.DataFrame, num_rows: int = 25, threshold: int = 5) -> int:
+def infer_customer_class_column(df: pl.DataFrame, num_rows: int = 25, threshold: int = 5, start_col: int = 0) -> int:
     """Infer the column index of the ZIP code column in a DataFrame."""
     customer_class_regex = r"^com|res|ind|gov|lrg|sm"
 
     # Keep track of the number of rows in each column that match the customer class regex
     customer_class_counts = []
-    for x in range(df.width):
+    for x in range(start_col, df.width):
         count = 0
         for y in range(num_rows):
             if df.item(y, x) is None:
@@ -183,7 +187,7 @@ def infer_customer_class_column(df: pl.DataFrame, num_rows: int = 25, threshold:
         customer_class_counts.append(count)
 
     # Check if multiple columns have at least `threshold` rows that match the customer class regex
-    customer_class_columns = [i for i, count in enumerate(customer_class_counts) if count >= threshold]
+    customer_class_columns = [i for i, count in enumerate(customer_class_counts, start=start_col) if count >= threshold]
     if len(customer_class_columns) == 1:
         return customer_class_columns[0]
     if len(customer_class_columns) > 1:
