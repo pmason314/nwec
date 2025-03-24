@@ -5,26 +5,30 @@ Volunteer data analysis, pipeline automation, and scripting done for the Northwe
 
 ## Setup
 
-1. Set up git and SSH keys from the [GitHub instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key).
-2. Clone this repository:
-    ```
-    git clone git@github.com:pmason314/nwec.git
-    ```
-3. `cd` into the repository folder and install `uv` for Python and dependency management:
+1. Install [VS Code](https://code.visualstudio.com/) and [git](https://git-scm.com/downloads).
+2. Set up git and SSH keys from the [GitHub instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key).
+3. Install `uv` for Python and dependency management:
     ```
     curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
-4. Create the project's virtual environment:
+5. `cd` to where you want this project folder to be and clone the repository:
+    ```
+    git clone git@github.com:pmason314/nwec.git
+    ```
+6. Open VS Code and open the repository folder from the previous step.
+7. In the VS Code integrated terminal, create the project's virtual environment:
    ```
     uv venv --python-preference=only-managed
    ```
-5. Install the project's dependencies:
+8. Install the project's dependencies:
     ```
     uv sync
     ```
 
 ## Usage
-
+Run the following notebooks:
+- [Combined arrearage amounts](./nwec/utility_reporting/arrearages/combined.ipynb)
+- [Combined arrearage counts](./nwec/utility_reporting/arrearage_counts/combined.ipynb)
 
 # Data Details
 Data retrieved from https://www.utc.wa.gov/casedocket/2020/200281/docsets.
@@ -57,7 +61,7 @@ Puget Sound Energy (pse)
 - U-200281-PSE-CLtr-(01-03-2025).pdf
 
 # Q4 Reports
-Avista, CNG - have the whole year
-NWNG, PAC, PSE - only have Q4
+Avista and CNG have the whole year
+NWNG, PAC, and PSE only have Q4
 
 
