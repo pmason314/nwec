@@ -163,5 +163,5 @@ data/*
 !data/utility_reporting
 data/utility_reporting/*
 !data/utility_reporting/raw
-data/utility_reporting/raw/*
-!data/utility_reporting/raw/README.md
+# data/utility_reporting/raw/*
+# !data/utility_reporting/raw/README.md
