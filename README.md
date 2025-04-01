@@ -48,7 +48,7 @@ Cascade Natural Gas (cng)
 - 200281-CNGC-Revised-Qtrly-COVID-19-***.xlsx
 - All data ever is in their one xlsx file, separated by category and year
 
-Northwest Natural Gas (nwng)
+Northwest Natural Gas (nwn)
 - COVID-19 Monthly Report for MM YYYY, on behalf of Northwest Natural Gas Company
 - 200281-NWN-MM-YYYY-COVID-***.xlsx
 - Files correctly have 1Q/2Q/3Q/4Q in the name, but submission titles aren't consistently named
@@ -63,7 +63,7 @@ Puget Sound Energy (pse)
 
 # Q4 Reports
 Avista and CNG have the whole year
-NWNG, PAC, and PSE only have Q4
+NWN, PAC, and PSE only have Q4
 
 # Hi Charlee
 

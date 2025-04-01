@@ -10,7 +10,7 @@ class Utility(Enum):
 
     AVISTA = ("Avista Corporation", "avista")
     CNG = ("Cascade Natural Gas Corporation", "cng")
-    NWNG = ("Northwest Natural Gas Company", "nwng")
+    NWN = ("Northwest Natural Gas Company", "nwn")
     PAC = ("PacifiCorp", "pac")
     PSE = ("Puget Sound Energy", "pse")
 
