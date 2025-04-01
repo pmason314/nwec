@@ -26,7 +26,8 @@ Volunteer data analysis, pipeline automation, and scripting done for the Northwe
     ```
 
 ## Usage
-Run the following notebooks:
+1. Put the .xlsx files in the `data/utility_reporting/raw` folder, separated by year and named like `{utility}_{year}_{quarter}`, e.g. `avista_2024_Q4.xlsx`.
+2. Run the following notebooks:
 - [Combined arrearage amounts](./nwec/utility_reporting/arrearages/combined.ipynb)
 - [Combined arrearage counts](./nwec/utility_reporting/arrearage_counts/combined.ipynb)
 
