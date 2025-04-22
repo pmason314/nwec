@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 
 import dateutil.parser
+import polars as pl
 
 
 def get_project_root() -> Path:
@@ -36,3 +37,25 @@ def format_date(date: str, output_format: str = "YYYY-MM-DD", input_format: str 
     else:
         input_date = dateutil.parser.parse(date)
     return input_date.strftime(output_format)
+
+
+def combine_persisted_df(new_df: pl.DataFrame, combined_df_path: Path, export_csv: bool = False) -> pl.DataFrame:
+    """Combine a DataFrame with a previously persisted DataFrame, then write the results to the same location.
+
+    DataFrame schemas must match.
+    """
+    assert combined_df_path.suffix == ".arrow", f"{combined_df_path} must be a .arrow file"
+    combined_df_path.parent.mkdir(parents=True, exist_ok=True)
+    if combined_df_path.exists():
+        combined_df = pl.read_ipc(combined_df_path)
+        assert new_df.schema == combined_df.schema, f"{new_df} and {combined_df} do not have the same schema"
+        combined_df = pl.concat([new_df, combined_df])
+        combined_df = combined_df.unique()
+    else:
+        combined_df = new_df.unique()
+
+    combined_df.write_ipc(combined_df_path)
+    if export_csv:
+        combined_df.write_csv(combined_df_path.with_suffix(".csv"))
+
+    return combined_df

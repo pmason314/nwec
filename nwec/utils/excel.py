@@ -57,7 +57,6 @@ def infer_zip_column(df: pl.DataFrame, num_rows: int = 25, threshold: int = 5, s
 
     # Check if multiple columns have at least 5 rows that match the ZIP code regex
     zip_columns = [i for i, count in enumerate(zip_counts, start=start_col) if count >= threshold]
-    print(zip_columns)
     if len(zip_columns) == 1:
         return zip_columns[0]
     if len(zip_columns) > 1:
