@@ -165,3 +165,4 @@ data/utility_reporting/*
 !data/utility_reporting/raw
 # data/utility_reporting/raw/*
 # !data/utility_reporting/raw/README.md
+*.DS_Store
