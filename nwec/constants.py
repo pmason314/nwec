@@ -24,6 +24,20 @@ DATA = PROJECT_ROOT / "data"
 RAW_UTILITY_DATA = DATA / "utility_reporting" / "raw"
 CLEAN_UTILITY_DATA = DATA / "utility_reporting" / "processed"
 
+MONTHS = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
 
 COMBINED_ARREARAGE_SCHEMA = [
     "Utility",
