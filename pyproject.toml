@@ -26,6 +26,7 @@ dependencies = [
     "polars>=1.6.0",
     "pyarrow>=21.0.0",
     "python-dateutil>=2.9.0.post0",
+    "python-pptx>=1.0.2",
     "requests>=2.32.3",
     "seaborn>=0.13.2",
 ]
@@ -50,7 +51,8 @@ build-backend = "hatchling.build"
 packages = ["nwec"]
 
 [tool.ruff]
-line-length = 120
+line-length   = 120
+output-format = "grouped"
 
 [tool.ruff.lint]
 select = [
@@ -105,7 +107,6 @@ ignore = [
     "FIX002",  # Line contains "TODO"
     "G004",    # Logging statement uses f-string
     "ISC001",  # Conflicts with ruff's formatter
-    "PD901",   # Usage of `df` for DataFrame variable names
     "S101",    # Usage of assert statements
     "S603",    # Subprocess call without validated input
     "S607",    # Subprocess call with partial executable path

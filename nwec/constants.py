@@ -8,11 +8,11 @@ import nwec.utils
 class Utility(Enum):
     """List of utility companies participating in the disconnection moratorium."""
 
-    AVISTA = ("Avista Corporation", "avista")
-    CNG = ("Cascade Natural Gas Corporation", "cng")
-    NWN = ("Northwest Natural Gas Company", "nwn")
-    PAC = ("PacifiCorp", "pac")
-    PSE = ("Puget Sound Energy", "pse")
+    PSE = ("Puget Sound Energy", "PSE")
+    AVISTA = ("Avista Corporation", "Avista")
+    PAC = ("PacifiCorp", "PAC")
+    CNG = ("Cascade Natural Gas Corporation", "CNG")
+    NWN = ("Northwest Natural Gas Company", "NWN")
 
     def __init__(self, full_name: str, code: str) -> None:
         self.full_name = full_name
@@ -23,6 +23,7 @@ PROJECT_ROOT = nwec.utils.get_project_root()
 DATA = PROJECT_ROOT / "data"
 RAW_UTILITY_DATA = DATA / "utility_reporting" / "raw"
 CLEAN_UTILITY_DATA = DATA / "utility_reporting" / "processed"
+REPORTS = DATA / "utility_reporting" / "reports"
 
 MONTHS = [
     "January",
