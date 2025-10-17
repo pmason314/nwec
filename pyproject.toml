@@ -126,7 +126,7 @@ unfixable = [
 "tests/*"     = ["ANN201", "INP001"]
 
 [tool.ruff.lint.pylint]
-max-args = 6
+max-args = 8
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

@@ -7,7 +7,10 @@ from pathlib import Path
 
 import plotly.graph_objects as go
 import polars as pl
-from dash import ALL, Dash, Input, Output, ctx, dash_table, dcc, html
+from dash import ALL, Dash, Input, Output, ctx, html
+
+from layouts.kpi_cards import build_kpi_cards
+from layouts.main_layout import create_main_layout
 
 # Load data
 DATA_PATH = Path(__file__).parent / "data" / "utility_reporting" / "processed" / "arrearage_counts.arrow"
@@ -18,92 +21,6 @@ app = Dash(
     __name__, external_stylesheets=["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"]
 )
 server = app.server  # Expose the server for deployment
-
-# Custom CSS for professional dropdowns
-app.index_string = """
-<!DOCTYPE html>
-<html>
-    <head>
-        {%metas%}
-        <title>{%title%}</title>
-        {%favicon%}
-        {%css%}
-        <style>
-            * {
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            }
-
-            .date-dropdown .Select-control {
-                border: 2px solid #e0e0e0 !important;
-                border-radius: 8px !important;
-                background-color: white !important;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-                transition: all 0.2s ease !important;
-                height: 42px !important;
-                font-size: 14px !important;
-            }
-
-            .date-dropdown .Select-control:hover {
-                border-color: #2563eb !important;
-                box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15) !important;
-            }
-
-            .date-dropdown .is-focused .Select-control {
-                border-color: #2563eb !important;
-                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-            }
-
-            .date-dropdown .Select-value,
-            .date-dropdown .Select-placeholder {
-                line-height: 38px !important;
-                padding-left: 12px !important;
-                color: #1f2937 !important;
-                font-weight: 500 !important;
-            }
-
-            .date-dropdown .Select-placeholder {
-                color: #9ca3af !important;
-            }
-
-            .date-dropdown .Select-arrow {
-                border-color: #6b7280 transparent transparent !important;
-                border-width: 6px 5px 3px !important;
-            }
-
-            .date-dropdown .Select-menu-outer {
-                border: 2px solid #e0e0e0 !important;
-                border-radius: 8px !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-                margin-top: 4px !important;
-            }
-
-            .date-dropdown .VirtualizedSelectOption {
-                padding: 10px 12px !important;
-                font-size: 14px !important;
-                transition: background-color 0.15s ease !important;
-            }
-
-            .date-dropdown .VirtualizedSelectOption:hover {
-                background-color: #eff6ff !important;
-                color: #1e40af !important;
-            }
-
-            .date-dropdown .VirtualizedSelectFocusedOption {
-                background-color: #dbeafe !important;
-                color: #1e40af !important;
-            }
-        </style>
-    </head>
-    <body>
-        {%app_entry%}
-        <footer>
-            {%config%}
-            {%scripts%}
-            {%renderer%}
-        </footer>
-    </body>
-</html>
-"""
 
 # Get unique values for filters
 all_utilities = sorted(arrearage_counts["Utility"].unique().to_list())
@@ -137,530 +54,16 @@ start_month_default = all_dates[0].month
 end_year_default = all_dates[-1].year
 end_month_default = all_dates[-1].month
 
-# Create the layout
-app.layout = html.Div(
-    [
-        # Header Section
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.H1(
-                            "Arrearage Counts Dashboard",
-                            style={
-                                "color": "white",
-                                "margin": 0,
-                                "fontSize": "32px",
-                                "fontWeight": "600",
-                            },
-                        ),
-                        html.P(
-                            "Utility arrearage trends",
-                            style={
-                                "color": "rgba(255, 255, 255, 0.9)",
-                                "margin": "8px 0 0 0",
-                                "fontSize": "16px",
-                            },
-                        ),
-                    ],
-                    style={"flex": "1"},
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            id="last-updated",
-                            children=f"Last Updated: {datetime.now(UTC).strftime('%B %d, %Y')}",
-                            style={
-                                "color": "rgba(255, 255, 255, 0.8)",
-                                "fontSize": "14px",
-                                "textAlign": "right",
-                            },
-                        ),
-                    ],
-                ),
-            ],
-            style={
-                "background": "linear-gradient(135deg, #156570 0%, #0d4b52 100%)",
-                "padding": "30px 40px",
-                "marginBottom": "30px",
-                "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                "display": "flex",
-                "alignItems": "center",
-                "justifyContent": "space-between",
-            },
-        ),
-        # KPI Cards Section
-        html.Div(
-            id="kpi-cards",
-            style={
-                "display": "grid",
-                "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))",
-                "gap": "20px",
-                "marginBottom": "30px",
-            },
-        ),
-        # Filters Section
-        html.Div(
-            [
-                html.H3(
-                    "Filters",
-                    style={
-                        "marginTop": 0,
-                        "marginBottom": "20px",
-                        "color": "#2c3e50",
-                        "fontSize": "20px",
-                        "fontWeight": "600",
-                    },
-                ),
-                html.Div(
-                    [
-                        html.Label(
-                            "Select Date Range:",
-                            style={"fontWeight": "600", "color": "#2c3e50", "marginBottom": "15px", "display": "block"},
-                        ),
-                        html.Div(
-                            [
-                                # Start date selectors
-                                html.Div(
-                                    [
-                                        html.Label(
-                                            "Start Date",
-                                            style={
-                                                "fontSize": "14px",
-                                                "color": "#2c3e50",
-                                                "marginBottom": "10px",
-                                                "display": "block",
-                                                "fontWeight": "600",
-                                            },
-                                        ),
-                                        html.Div(
-                                            [
-                                                html.Div(
-                                                    [
-                                                        dcc.Dropdown(
-                                                            id="start-month-picker",
-                                                            options=[
-                                                                {"label": month_names[i - 1], "value": i}
-                                                                for i in available_months_by_year[start_year_default]
-                                                            ],
-                                                            value=start_month_default,
-                                                            clearable=False,
-                                                            searchable=False,
-                                                            className="date-dropdown",
-                                                        ),
-                                                    ],
-                                                    style={"flex": "1", "marginRight": "10px"},
-                                                ),
-                                                html.Div(
-                                                    [
-                                                        dcc.Dropdown(
-                                                            id="start-year-picker",
-                                                            options=[
-                                                                {"label": str(year), "value": year}
-                                                                for year in available_years
-                                                            ],
-                                                            value=start_year_default,
-                                                            clearable=False,
-                                                            searchable=False,
-                                                            className="date-dropdown",
-                                                        ),
-                                                    ],
-                                                    style={"flex": "0 0 100px"},
-                                                ),
-                                            ],
-                                            style={"display": "flex", "gap": "10px"},
-                                        ),
-                                    ],
-                                    style={
-                                        "flex": "0 0 320px",
-                                        "padding": "15px",
-                                        "backgroundColor": "#f8f9fa",
-                                        "borderRadius": "8px",
-                                        "border": "1px solid #e0e0e0",
-                                    },
-                                ),
-                                # End date selectors
-                                html.Div(
-                                    [
-                                        html.Label(
-                                            "End Date",
-                                            style={
-                                                "fontSize": "14px",
-                                                "color": "#2c3e50",
-                                                "marginBottom": "10px",
-                                                "display": "block",
-                                                "fontWeight": "600",
-                                            },
-                                        ),
-                                        html.Div(
-                                            [
-                                                html.Div(
-                                                    [
-                                                        dcc.Dropdown(
-                                                            id="end-month-picker",
-                                                            options=[
-                                                                {"label": month_names[i - 1], "value": i}
-                                                                for i in available_months_by_year[end_year_default]
-                                                            ],
-                                                            value=end_month_default,
-                                                            clearable=False,
-                                                            searchable=False,
-                                                            className="date-dropdown",
-                                                        ),
-                                                    ],
-                                                    style={"flex": "1", "marginRight": "10px"},
-                                                ),
-                                                html.Div(
-                                                    [
-                                                        dcc.Dropdown(
-                                                            id="end-year-picker",
-                                                            options=[
-                                                                {"label": str(year), "value": year}
-                                                                for year in available_years
-                                                            ],
-                                                            value=end_year_default,
-                                                            clearable=False,
-                                                            searchable=False,
-                                                            className="date-dropdown",
-                                                        ),
-                                                    ],
-                                                    style={"flex": "0 0 100px"},
-                                                ),
-                                            ],
-                                            style={"display": "flex", "gap": "10px"},
-                                        ),
-                                    ],
-                                    style={
-                                        "flex": "0 0 320px",
-                                        "padding": "15px",
-                                        "backgroundColor": "#f8f9fa",
-                                        "borderRadius": "8px",
-                                        "border": "1px solid #e0e0e0",
-                                    },
-                                ),
-                            ],
-                            style={"display": "flex", "gap": "20px"},
-                        ),
-                    ],
-                    style={"marginBottom": 25},
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                html.Label(
-                                    "Select Utilities:",
-                                    style={
-                                        "fontWeight": "600",
-                                        "color": "#2c3e50",
-                                        "marginBottom": "10px",
-                                        "display": "block",
-                                    },
-                                ),
-                                html.Div(
-                                    [
-                                        html.Button(
-                                            "Select All",
-                                            id="select-all-btn",
-                                            n_clicks=0,
-                                            style={
-                                                "marginRight": "10px",
-                                                "padding": "6px 16px",
-                                                "backgroundColor": "#156570",
-                                                "color": "white",
-                                                "border": "none",
-                                                "borderRadius": "4px",
-                                                "cursor": "pointer",
-                                                "fontSize": "14px",
-                                                "fontWeight": "500",
-                                            },
-                                        ),
-                                        html.Button(
-                                            "Clear All",
-                                            id="clear-all-btn",
-                                            n_clicks=0,
-                                            style={
-                                                "padding": "6px 16px",
-                                                "backgroundColor": "#95a5a6",
-                                                "color": "white",
-                                                "border": "none",
-                                                "borderRadius": "4px",
-                                                "cursor": "pointer",
-                                                "fontSize": "14px",
-                                                "fontWeight": "500",
-                                            },
-                                        ),
-                                    ],
-                                    style={"marginBottom": "15px"},
-                                ),
-                            ],
-                        ),
-                        # Utility chips
-                        html.Div(
-                            id="utility-chips-container",
-                            children=[
-                                html.Button(
-                                    util,
-                                    id={"type": "utility-chip", "index": util},
-                                    n_clicks=0,
-                                    style={
-                                        "padding": "10px 20px",
-                                        "margin": "5px",
-                                        "backgroundColor": "#156570",
-                                        "color": "white",
-                                        "border": "2px solid #156570",
-                                        "borderRadius": "25px",
-                                        "cursor": "pointer",
-                                        "fontSize": "14px",
-                                        "fontWeight": "500",
-                                        "transition": "all 0.3s ease",
-                                        "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-                                    },
-                                )
-                                for util in all_utilities
-                            ],
-                            style={
-                                "display": "flex",
-                                "flexWrap": "wrap",
-                                "gap": "5px",
-                            },
-                        ),
-                        # Hidden storage for selected utilities
-                        dcc.Store(id="selected-utilities-store", data=all_utilities),
-                    ],
-                ),
-            ],
-            style={
-                "padding": "25px",
-                "backgroundColor": "white",
-                "borderRadius": "8px",
-                "marginBottom": "30px",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                "border": "1px solid #e1e8ed",
-            },
-        ),
-        # Tabs for Chart and Table
-        dcc.Tabs(
-            id="tabs",
-            value="chart-tab",
-            children=[
-                dcc.Tab(
-                    label="📊 Arrearage Counts by Utility",
-                    value="chart-tab",
-                    style={
-                        "padding": "12px 24px",
-                        "fontWeight": "500",
-                        "fontSize": "15px",
-                    },
-                    selected_style={
-                        "padding": "12px 24px",
-                        "fontWeight": "600",
-                        "fontSize": "15px",
-                        "borderTop": "3px solid #156570",
-                        "backgroundColor": "white",
-                    },
-                    children=[
-                        html.Div(
-                            [
-                                html.Div(
-                                    [
-                                        html.H3(
-                                            "Total Arrearage Counts by Utility",
-                                            style={
-                                                "marginTop": 0,
-                                                "marginBottom": "5px",
-                                                "color": "#2c3e50",
-                                                "fontSize": "22px",
-                                                "fontWeight": "600",
-                                            },
-                                        ),
-                                        html.P(
-                                            id="chart-subtitle",
-                                            style={
-                                                "color": "#7f8c8d",
-                                                "fontSize": "14px",
-                                                "margin": "0 0 20px 0",
-                                            },
-                                        ),
-                                    ],
-                                ),
-                                dcc.Loading(
-                                    id="loading-chart",
-                                    type="default",
-                                    color="#156570",
-                                    children=html.Div(
-                                        [
-                                            dcc.Graph(id="stacked-area-chart", config={"displayModeBar": True}),
-                                        ]
-                                    ),
-                                ),
-                            ],
-                            style={
-                                "padding": "25px",
-                                "backgroundColor": "white",
-                                "borderRadius": "8px",
-                                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                                "border": "1px solid #e1e8ed",
-                            },
-                        )
-                    ],
-                ),
-                dcc.Tab(
-                    label="📋 Data Table",
-                    value="table-tab",
-                    style={
-                        "padding": "12px 24px",
-                        "fontWeight": "500",
-                        "fontSize": "15px",
-                    },
-                    selected_style={
-                        "padding": "12px 24px",
-                        "fontWeight": "600",
-                        "fontSize": "15px",
-                        "borderTop": "3px solid #156570",
-                        "backgroundColor": "white",
-                    },
-                    children=[
-                        html.Div(
-                            [
-                                html.Div(
-                                    [
-                                        html.H3(
-                                            "Arrearage Count Data",
-                                            style={
-                                                "marginTop": 0,
-                                                "marginBottom": "5px",
-                                                "color": "#2c3e50",
-                                                "fontSize": "22px",
-                                                "fontWeight": "600",
-                                                "display": "inline-block",
-                                            },
-                                        ),
-                                        html.Button(
-                                            "⬇ Download CSV",
-                                            id="download-btn",
-                                            n_clicks=0,
-                                            style={
-                                                "float": "right",
-                                                "padding": "8px 20px",
-                                                "backgroundColor": "#156570",
-                                                "color": "white",
-                                                "border": "none",
-                                                "borderRadius": "4px",
-                                                "cursor": "pointer",
-                                                "fontSize": "14px",
-                                                "fontWeight": "500",
-                                            },
-                                        ),
-                                        dcc.Download(id="download-dataframe-csv"),
-                                    ],
-                                    style={"marginBottom": "20px", "overflow": "auto"},
-                                ),
-                                dcc.Loading(
-                                    id="loading-table",
-                                    type="default",
-                                    color="#156570",
-                                    children=html.Div(
-                                        [
-                                            dash_table.DataTable(
-                                                id="data-table",
-                                                columns=[
-                                                    {"name": "Utility", "id": "Utility"},
-                                                    {"name": "Zip Code", "id": "Zip Code"},
-                                                    {"name": "Month", "id": "Month"},
-                                                    {
-                                                        "name": "Arrearage Count",
-                                                        "id": "Arrearage Count",
-                                                        "type": "numeric",
-                                                        "format": {"specifier": ",.0f"},
-                                                    },
-                                                ],
-                                                style_table={"overflowX": "auto"},
-                                                style_cell={
-                                                    "textAlign": "left",
-                                                    "padding": "12px",
-                                                    "fontSize": "14px",
-                                                    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                                                },
-                                                style_header={
-                                                    "backgroundColor": "#156570",
-                                                    "color": "white",
-                                                    "fontWeight": "600",
-                                                    "fontSize": "14px",
-                                                    "textAlign": "left",
-                                                    "padding": "14px",
-                                                },
-                                                style_data_conditional=[
-                                                    {
-                                                        "if": {"row_index": "odd"},
-                                                        "backgroundColor": "#f8f9fa",
-                                                    },
-                                                    {
-                                                        "if": {"state": "selected"},
-                                                        "backgroundColor": "#e8f4f5",
-                                                        "border": "1px solid #156570",
-                                                    },
-                                                ],
-                                                page_size=25,
-                                                sort_action="native",
-                                                filter_action="native",
-                                                style_filter={
-                                                    "backgroundColor": "#f1f3f5",
-                                                    "fontWeight": "normal",
-                                                },
-                                            ),
-                                        ]
-                                    ),
-                                ),
-                            ],
-                            style={
-                                "padding": "25px",
-                                "backgroundColor": "white",
-                                "borderRadius": "8px",
-                                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                                "border": "1px solid #e1e8ed",
-                            },
-                        )
-                    ],
-                ),
-            ],
-            style={"marginBottom": "30px"},
-        ),
-        # Footer
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.P(
-                            [
-                                "Data Source: UTC Docket Case 200281 | ",
-                                html.Span(
-                                    f"Dashboard Generated: {datetime.now(UTC).strftime('%B %d, %Y')}",
-                                    style={"fontWeight": "500"},
-                                ),
-                            ],
-                            style={"margin": 0, "fontSize": "14px", "color": "#7f8c8d"},
-                        ),
-                    ],
-                    style={"textAlign": "center"},
-                ),
-            ],
-            style={
-                "padding": "20px",
-                "backgroundColor": "#f8f9fa",
-                "borderTop": "1px solid #e1e8ed",
-                "marginTop": "30px",
-            },
-        ),
-    ],
-    style={
-        "padding": "0",
-        "maxWidth": "1600px",
-        "margin": "0 auto",
-        "backgroundColor": "#f5f7fa",
-        "minHeight": "100vh",
-        "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-    },
+# Create the layout using modular components
+app.layout = create_main_layout(
+    all_utilities,
+    available_months_by_year,
+    available_years,
+    start_year_default,
+    start_month_default,
+    end_year_default,
+    end_month_default,
+    month_names,
 )
 
 
@@ -713,7 +116,7 @@ def update_utility_selection(
     return current_selection, create_chips(current_selection)
 
 
-def create_chips(selected_utilities):
+def create_chips(selected_utilities: list[str]) -> list:
     """Create chip components with proper styling based on selection state."""
     chips = []
     for util in all_utilities:
@@ -746,7 +149,7 @@ def create_chips(selected_utilities):
     Output("start-month-picker", "options"),
     Input("start-year-picker", "value"),
 )
-def update_start_month_options(selected_year):
+def update_start_month_options(selected_year: int) -> list[dict]:
     """Update available months based on selected year for start date."""
     if selected_year in available_months_by_year:
         return [{"label": month_names[i - 1], "value": i} for i in available_months_by_year[selected_year]]
@@ -758,7 +161,7 @@ def update_start_month_options(selected_year):
     Output("end-month-picker", "options"),
     Input("end-year-picker", "value"),
 )
-def update_end_month_options(selected_year):
+def update_end_month_options(selected_year: int) -> list[dict]:
     """Update available months based on selected year for end date."""
     if selected_year in available_months_by_year:
         return [{"label": month_names[i - 1], "value": i} for i in available_months_by_year[selected_year]]
@@ -781,7 +184,9 @@ def update_end_month_options(selected_year):
         Input("selected-utilities-store", "data"),
     ],
 )
-def update_dashboard(start_month, start_year, end_month, end_year, selected_utilities):
+def update_dashboard(
+    start_month: int, start_year: int, end_month: int, end_year: int, selected_utilities: list[str]
+) -> tuple[list[html.Div], str, go.Figure, list[dict]]:
     """Update the KPI cards, chart and table based on filter selections."""
     # Convert month/year to datetime objects
     start_date = datetime(start_year, start_month, 1, tzinfo=UTC) if start_month and start_year else all_dates[0]
@@ -826,105 +231,16 @@ def update_dashboard(start_month, start_year, end_month, end_year, selected_util
     else:
         percent_change = 0
 
-    # Create KPI cards
-    kpi_cards = [
-        html.Div(
-            [
-                html.Div(
-                    "📈 Total Arrearages",
-                    style={"fontSize": "14px", "color": "#7f8c8d", "marginBottom": "8px", "fontWeight": "500"},
-                ),
-                html.Div(
-                    f"{total_arrearages:,.0f}",
-                    style={"fontSize": "28px", "fontWeight": "700", "color": "#2c3e50", "marginBottom": "4px"},
-                ),
-                html.Div(
-                    f"{percent_change:+.1f}% from first to last month" if len(monthly_totals) >= 2 else "N/A",
-                    style={
-                        "fontSize": "12px",
-                        "color": "#27ae60" if percent_change < 0 else "#e74c3c" if percent_change > 0 else "#7f8c8d",
-                        "fontWeight": "500",
-                    },
-                ),
-            ],
-            style={
-                "backgroundColor": "white",
-                "padding": "20px",
-                "borderRadius": "8px",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                "border": "1px solid #e1e8ed",
-            },
-        ),
-        html.Div(
-            [
-                html.Div(
-                    "📊 Avg. Monthly Count",
-                    style={"fontSize": "14px", "color": "#7f8c8d", "marginBottom": "8px", "fontWeight": "500"},
-                ),
-                html.Div(
-                    f"{avg_monthly:,.0f}",
-                    style={"fontSize": "28px", "fontWeight": "700", "color": "#2c3e50", "marginBottom": "4px"},
-                ),
-                html.Div(
-                    f"Across {len(monthly_totals)} months",
-                    style={"fontSize": "12px", "color": "#7f8c8d", "fontWeight": "500"},
-                ),
-            ],
-            style={
-                "backgroundColor": "white",
-                "padding": "20px",
-                "borderRadius": "8px",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                "border": "1px solid #e1e8ed",
-            },
-        ),
-        html.Div(
-            [
-                html.Div(
-                    "📍 Unique Zip Codes",
-                    style={"fontSize": "14px", "color": "#7f8c8d", "marginBottom": "8px", "fontWeight": "500"},
-                ),
-                html.Div(
-                    f"{unique_zips:,}",
-                    style={"fontSize": "28px", "fontWeight": "700", "color": "#2c3e50", "marginBottom": "4px"},
-                ),
-                html.Div(
-                    f"In {num_utilities} utilities",
-                    style={"fontSize": "12px", "color": "#7f8c8d", "fontWeight": "500"},
-                ),
-            ],
-            style={
-                "backgroundColor": "white",
-                "padding": "20px",
-                "borderRadius": "8px",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                "border": "1px solid #e1e8ed",
-            },
-        ),
-        html.Div(
-            [
-                html.Div(
-                    "🏢 Active Utilities",
-                    style={"fontSize": "14px", "color": "#7f8c8d", "marginBottom": "8px", "fontWeight": "500"},
-                ),
-                html.Div(
-                    f"{num_utilities}",
-                    style={"fontSize": "28px", "fontWeight": "700", "color": "#2c3e50", "marginBottom": "4px"},
-                ),
-                html.Div(
-                    f"of {len(all_utilities)} total",
-                    style={"fontSize": "12px", "color": "#7f8c8d", "fontWeight": "500"},
-                ),
-            ],
-            style={
-                "backgroundColor": "white",
-                "padding": "20px",
-                "borderRadius": "8px",
-                "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
-                "border": "1px solid #e1e8ed",
-            },
-        ),
-    ]
+    # Create KPI cards using the component builder
+    kpi_cards = build_kpi_cards(
+        total_arrearages=total_arrearages,
+        avg_monthly=avg_monthly,
+        unique_zips=unique_zips,
+        num_utilities=num_utilities,
+        total_utilities=len(all_utilities),
+        percent_change=percent_change,
+        num_months=len(monthly_totals),
+    )
 
     # Create chart subtitle
     chart_subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
@@ -1011,7 +327,14 @@ def update_dashboard(start_month, start_year, end_month, end_year, selected_util
     ],
     prevent_initial_call=True,
 )
-def download_csv(n_clicks, start_month, start_year, end_month, end_year, selected_utilities):
+def download_csv(
+    n_clicks: int | None,
+    start_month: int,
+    start_year: int,
+    end_month: int,
+    end_year: int,
+    selected_utilities: list[str],
+) -> dict | None:
     """Download the filtered data as CSV."""
     if n_clicks is None or n_clicks == 0:
         return None

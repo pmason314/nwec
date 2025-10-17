@@ -69,7 +69,7 @@ def add_centered_image(presentation: Presentation, slide: Slide, image_path: Pat
     # Standard slide dimensions are 10" x 7.5"
     slide_width = presentation.slide_width
     slide_height = presentation.slide_height
-    left = (slide_width - width) / 2
-    top = (slide_height - height) / 2 - Inches(0.5)
+    left = (slide_width - width) / 2  # type: ignore
+    top = (slide_height - height) / 2 - Inches(0.5)  # type: ignore
 
     slide.shapes.add_picture(str(image_path), left, top, width=width, height=height)
