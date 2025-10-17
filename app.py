@@ -1042,4 +1042,10 @@ if __name__ == "__main__":
     # Bind only to localhost by default for improved security; set BIND_HOST to override if needed.
     bind_host = os.environ.get("BIND_HOST", "localhost")
     port = int(os.environ.get("PORT", "8080"))
-    app.run(debug=True, host=bind_host, port=port)
+
+    # Set debug mode based on STAGE environment variable
+    # debug=False in production, debug=True for development/local
+    stage = os.environ.get("STAGE", "dev").lower()
+    debug_mode = stage != "prod"
+
+    app.run(debug=debug_mode, host=bind_host, port=port)
