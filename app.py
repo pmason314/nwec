@@ -2,7 +2,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -32,8 +32,7 @@ app.index_string = """
             * {
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             }
-            
-            /* Professional dropdown styling */
+
             .date-dropdown .Select-control {
                 border: 2px solid #e0e0e0 !important;
                 border-radius: 8px !important;
@@ -43,17 +42,17 @@ app.index_string = """
                 height: 42px !important;
                 font-size: 14px !important;
             }
-            
+
             .date-dropdown .Select-control:hover {
                 border-color: #2563eb !important;
                 box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15) !important;
             }
-            
+
             .date-dropdown .is-focused .Select-control {
                 border-color: #2563eb !important;
                 box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
             }
-            
+
             .date-dropdown .Select-value,
             .date-dropdown .Select-placeholder {
                 line-height: 38px !important;
@@ -61,34 +60,34 @@ app.index_string = """
                 color: #1f2937 !important;
                 font-weight: 500 !important;
             }
-            
+
             .date-dropdown .Select-placeholder {
                 color: #9ca3af !important;
             }
-            
+
             .date-dropdown .Select-arrow {
                 border-color: #6b7280 transparent transparent !important;
                 border-width: 6px 5px 3px !important;
             }
-            
+
             .date-dropdown .Select-menu-outer {
                 border: 2px solid #e0e0e0 !important;
                 border-radius: 8px !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
                 margin-top: 4px !important;
             }
-            
+
             .date-dropdown .VirtualizedSelectOption {
                 padding: 10px 12px !important;
                 font-size: 14px !important;
                 transition: background-color 0.15s ease !important;
             }
-            
+
             .date-dropdown .VirtualizedSelectOption:hover {
                 background-color: #eff6ff !important;
                 color: #1e40af !important;
             }
-            
+
             .date-dropdown .VirtualizedSelectFocusedOption {
                 background-color: #dbeafe !important;
                 color: #1e40af !important;
@@ -125,10 +124,10 @@ month_names = [
     "November",
     "December",
 ]
-available_years = sorted(list(set([date.year for date in all_dates])))
+available_years = sorted({date.year for date in all_dates})
 available_months_by_year = {}
 for year in available_years:
-    available_months_by_year[year] = sorted(list(set([date.month for date in all_dates if date.year == year])))
+    available_months_by_year[year] = sorted({date.month for date in all_dates if date.year == year})
 
 # Default start: first available month/year
 start_year_default = all_dates[0].year
@@ -170,7 +169,7 @@ app.layout = html.Div(
                     [
                         html.Div(
                             id="last-updated",
-                            children=f"Last Updated: {datetime.now().strftime('%B %d, %Y')}",
+                            children=f"Last Updated: {datetime.now(UTC).strftime('%B %d, %Y')}",
                             style={
                                 "color": "rgba(255, 255, 255, 0.8)",
                                 "fontSize": "14px",
@@ -636,7 +635,7 @@ app.layout = html.Div(
                             [
                                 "Data Source: UTC Docket Case 200281 | ",
                                 html.Span(
-                                    f"Dashboard Generated: {datetime.now().strftime('%B %d, %Y')}",
+                                    f"Dashboard Generated: {datetime.now(UTC).strftime('%B %d, %Y')}",
                                     style={"fontWeight": "500"},
                                 ),
                             ],
@@ -676,7 +675,12 @@ app.layout = html.Div(
     [Input("selected-utilities-store", "data")],
     prevent_initial_call=True,
 )
-def update_utility_selection(_chip_clicks, _select_all, _clear_all, current_selection):
+def update_utility_selection(
+    _chip_clicks: list[int],
+    _select_all: int,
+    _clear_all: int,
+    current_selection: list,
+) -> tuple[list[str], list]:
     """Handle utility chip selection and Select All/Clear All buttons."""
     if not ctx.triggered:
         return current_selection, create_chips(current_selection)
@@ -780,8 +784,8 @@ def update_end_month_options(selected_year):
 def update_dashboard(start_month, start_year, end_month, end_year, selected_utilities):
     """Update the KPI cards, chart and table based on filter selections."""
     # Convert month/year to datetime objects
-    start_date = datetime(start_year, start_month, 1) if start_month and start_year else all_dates[0]
-    end_date = datetime(end_year, end_month, 1) if end_month and end_year else all_dates[-1]
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC) if start_month and start_year else all_dates[0]
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC) if end_month and end_year else all_dates[-1]
 
     # Ensure we have a list of utilities - if empty, show NO data
     if not selected_utilities:
@@ -1013,8 +1017,8 @@ def download_csv(n_clicks, start_month, start_year, end_month, end_year, selecte
         return None
 
     # Convert month/year to datetime objects
-    start_date = datetime(start_year, start_month, 1) if start_month and start_year else all_dates[0]
-    end_date = datetime(end_year, end_month, 1) if end_month and end_year else all_dates[-1]
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC) if start_month and start_year else all_dates[0]
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC) if end_month and end_year else all_dates[-1]
 
     # Ensure we have a list of utilities - if empty, show NO data
     if not selected_utilities:
@@ -1039,13 +1043,8 @@ def download_csv(n_clicks, start_month, start_year, end_month, end_year, selecte
 
 
 if __name__ == "__main__":
-    # Bind only to localhost by default for improved security; set BIND_HOST to override if needed.
+    # Run with `uv run --env-file .env gunicorn app:server -b 127.0.0.1:8080 -w 1` for production
+    # Use systemd for long term usage
     bind_host = os.environ.get("BIND_HOST", "localhost")
     port = int(os.environ.get("PORT", "8080"))
-
-    # Set debug mode based on STAGE environment variable
-    # debug=False in production, debug=True for development/local
-    stage = os.environ.get("STAGE", "dev").lower()
-    debug_mode = stage != "prod"
-
-    app.run(debug=debug_mode, host=bind_host, port=port)
+    app.run(debug=True, host=bind_host, port=port)

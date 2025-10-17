@@ -53,7 +53,7 @@ module-root = ""
 
 [tool.ruff]
 line-length   = 120
-output-format = "grouped"
+output-format = "concise"
 
 [tool.ruff.lint]
 select = [
