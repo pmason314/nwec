@@ -156,7 +156,7 @@ app.layout = html.Div(
                             },
                         ),
                         html.P(
-                            "Track utility arrearage trends across the Northwest",
+                            "Utility arrearage trends",
                             style={
                                 "color": "rgba(255, 255, 255, 0.9)",
                                 "margin": "8px 0 0 0",
@@ -446,7 +446,7 @@ app.layout = html.Div(
             value="chart-tab",
             children=[
                 dcc.Tab(
-                    label="📊 Stacked Area Chart",
+                    label="📊 Arrearage Counts by Utility",
                     value="chart-tab",
                     style={
                         "padding": "12px 24px",
