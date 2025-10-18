@@ -10,7 +10,7 @@ def create_tabs() -> dcc.Tabs:
         value="chart-tab",
         children=[
             dcc.Tab(
-                label="📊 Stacked Area Chart",
+                label="📊 Arrearage County by Utility",
                 value="chart-tab",
                 style={
                     "padding": "12px 24px",

@@ -99,3 +99,14 @@
     color: #7f8c8d;
     font-weight: 500;
 }
+/* Footer Link Styling */
+.footer-link {
+    color: #156570;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+    color: #0d4b52;
+    text-decoration: underline;
+}

@@ -13,7 +13,14 @@ def create_footer() -> html.Div:
                 [
                     html.P(
                         [
-                            "Data Source: UTC Docket Case 200281 | ",
+                            "Data Source: ",
+                            html.A(
+                                "UTC Docket Case 200281",
+                                href="https://google.com",
+                                target="_blank",
+                                style={"color": "#156570", "textDecoration": "none"},
+                            ),
+                            " | ",
                             html.Span(
                                 f"Dashboard Generated: {datetime.now(tz=UTC).strftime('%B %d, %Y')}",
                                 style={"fontWeight": "500"},

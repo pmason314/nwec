@@ -18,7 +18,9 @@ arrearage_counts = pl.read_ipc(DATA_PATH)
 
 # Initialize the Dash app with external stylesheets
 app = Dash(
-    __name__, external_stylesheets=["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"]
+    __name__,
+    external_stylesheets=["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"],
+    title="Arrearage Counts Dashboard",
 )
 server = app.server  # Expose the server for deployment
 
