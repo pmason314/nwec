@@ -206,7 +206,7 @@ def update_dashboard(
         filtered_df = filtered_df.filter(pl.col("Utility").is_in(selected_utilities))
     else:
         # No utilities selected - return empty dataframe
-        filtered_df = filtered_df.filter(pl.lit(False))
+        filtered_df = filtered_df.filter(pl.lit(value=False))
 
     # Calculate KPI metrics
     total_arrearages = filtered_df.select(pl.col("Arrearage Count").sum()).item()
@@ -357,7 +357,7 @@ def download_csv(
         filtered_df = filtered_df.filter(pl.col("Utility").is_in(selected_utilities))
     else:
         # No utilities selected - return empty dataframe
-        filtered_df = filtered_df.filter(pl.lit(False))
+        filtered_df = filtered_df.filter(pl.lit(value=False))
 
     # Convert to pandas and prepare for download
     table_df = filtered_df.to_pandas()

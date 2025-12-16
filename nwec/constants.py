@@ -15,6 +15,12 @@ class Utility(Enum):
     NWN = ("Northwest Natural Gas Company", "NWN")
 
     def __init__(self, full_name: str, code: str) -> None:
+        """Enum for an exhaustive list of utility companies.
+
+        Args:
+        full_name (str): Formal name of the utility
+        code (str): Abbreviated code for the utility
+        """
         self.full_name = full_name
         self.code = code
 
