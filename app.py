@@ -369,6 +369,7 @@ def download_csv(
 
 if __name__ == "__main__":
     # Run with `uv run --env-file .env gunicorn app:server -b 127.0.0.1:8080 -w 1` for production
+    # Replace host IP with 0.0.0.0:8080 when running in dev
     # Use systemd for long term usage
     bind_host = os.environ.get("BIND_HOST", "localhost")
     port = int(os.environ.get("PORT", "8080"))
