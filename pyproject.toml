@@ -12,12 +12,13 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Natural Language :: English",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 
 dependencies = [
     "beautifulsoup4>=4.12.3",
     "dash>=2.18.2",
     "fastexcel>=0.11.6",
+    "gunicorn>=23.0.0",
     "nbformat>=5.10.4",
     "nwec",
     "openpyxl>=3.1.5",
@@ -26,6 +27,7 @@ dependencies = [
     "polars>=1.6.0",
     "pyarrow>=21.0.0",
     "python-dateutil>=2.9.0.post0",
+    "python-pptx>=1.0.2",
     "requests>=2.32.3",
     "seaborn>=0.13.2",
 ]
@@ -39,115 +41,70 @@ dev = [
     "ruff>=0.8.1",
 ]
 
-[tool.uv]
-package = true
-
 [build-system]
-requires      = ["hatchling"]
-build-backend = "hatchling.build"
+requires      = ["uv_build"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["nwec"]
+[tool.uv.build-backend]
+module-root = ""
 
 [tool.ruff]
-line-length = 120
+line-length   = 120
+output-format = "concise"
 
 [tool.ruff.lint]
 select = [
-    "F",     # pyflakes
-    "E",     # pycodestyle (errors)
-    "W",     # pycodestyle (warnings)
-    "C90",   # mccabe complexity
-    "I",     # isort
-    "N",     # pep8-naming
-    "D",     # pydocstyle
-    "UP",    # pyupgrade
-    "YTT",   # flake8-2020
-    "ANN",   # flake8-annotations
-    "ASYNC", # flake8-async
-    "S",     # flake8-bandit
-    "BLE",   # flake8-blind-except
-    "B",     # flake8-bugbear
-    "A",     # flake8-builtins
-    "C4",    # flake8-comprehensions
-    "DTZ",   # flake8-datetimez
-    "T10",   # flake8-debugger
-    "ISC",   # flake8-implicit-str-concat
-    "ICN",   # flake8-import-conventions
-    "LOG",   # flake8-logging
-    "G",     # flake8-logging-format
-    "INP",   # flake8-no-pep420
-    "PYI",   # flake8-pyi
-    "PT",    # flake8-pytest-style
-    "Q",     # flake8-quotes
-    "RSE",   # flake8-raise
-    "RET",   # flake8-return
-    "SLF",   # flake8-self
-    "SIM",   # flake8-simplify
-    "TID",   # flake8-tidy-imports
-    "TC",    # flake8-type-checking
-    "ARG",   # flake8-unused-arguments
-    "PTH",   # flake8-use-pathlib
-    "TD",    # flake8-todos
-    "FIX",   # flake8-fixme
-    "PD",    # pandas-vet
-    "PL",    # pylint
-    "TRY",   # tryceratops
-    "FLY",   # flynt
-    "NPY",   # numpy-specific rules
-    "FURB",  # refurb
-    "RUF",   # ruff-specific rules
+    "ALL",
 ]
 ignore = [
-    "D107",    # Public __init__ method is missing a docstring
-    "D203",    # Class docstring is missing a blank line after (Alternative to D211)
-    "D213",    # Docstring summary is not on the second line of the docstring (Alternative to D212)
-    "FIX002",  # Line contains "TODO"
-    "G004",    # Logging statement uses f-string
-    "ISC001",  # Conflicts with ruff's formatter
-    "PD901",   # Usage of `df` for DataFrame variable names
-    "S101",    # Usage of assert statements
-    "S603",    # Subprocess call without validated input
-    "S607",    # Subprocess call with partial executable path
-    "TD002",   # Check that TODO comments have authors mentioned
-    "TRY002",  # Create your own exception class
-    "TRY003",  # Avoid specifying long messages outsdie of the exception class
-    "PLR2004", # Magic values used in comparisons
+    "COM812",  # Missing trailing comma (conflicts with ruff's formatter)
+    "D203",    # Missing blank line after class docstring (alternative to D211)
+    "D213",    # Docstring summary should start on the second line (alternative to D212)
+    "EM",      # Assign exception strings to variables before raising them
+    "ERA",     # Avoid commented-out code; check during CI/CD instead
+    "F401",    # Avoid unused imports (check during pre-commit instead or CI/CD instead)
+    "FBT001",  # Avoid positional boolean arguments, checked via type hints
+    "FBT002",  # Avoid positional boolean arguments, checked via default values
+    "FIX002",  # Avoid TODO comments
+    "G004",    # Avoid f-strings in logging statements
+    "PLR2004", # Avoid magic values in comparisons
+    "S101",    # Avoid assert statements
+    "S603",    # Avoid subprocess calls without validated input (prone to false positives)
+    "S607",    # Avoid starting a process with a partial executable path
+    "TD002",   # Missing author in TODO comment
+    "TRY003",  # Avoid long exception messages outside the exception class
 ]
 unfixable = [
-    "F401", # Remove unused imports
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["D104", "F401"]
-"docs/*"      = ["INP001"]
-"tests/*"     = ["ANN201", "INP001"]
+"tests/*" = ["S101"] # Allow assert statements in test files
 
 [tool.ruff.lint.pylint]
-max-args = 6
+max-args = 8
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
-
-[tool.ruff.lint.flake8-builtins]
-builtins-ignorelist = ["copyright"]
 
 [tool.ruff.format]
 docstring-code-format = true
 
 [tool.creosote]
+exclude-deps = [
+    "beautifulsoup4",
+    "dash",
+    "fastexcel",
+    "gunicorn",
+    "nbformat",
+    "pandas",
+    "plotly",
+    "pyarrow",
+    "requests",
+]
 venvs = [".venv"]
 paths = ["nwec", "tests"]
 deps-file = "pyproject.toml"
 sections = ["project.dependencies"]
-exclude-deps = [
-    "polars",
-    "pandas",
-    "fastexcel",
-    "nbformat",
-    "plotly",
-    "seaborn",
-]
 
 [tool.pyright]
 reportArgumentType      = false
