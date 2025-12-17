@@ -1,12 +1,12 @@
 """Main layout assembly for the dashboard."""
 
 from dash import html
-
 from layouts.filters import create_filters
 from layouts.footer import create_footer
 from layouts.header import create_header
-from layouts.kpi_cards import create_kpi_cards_section
-from layouts.tabs import create_tabs
+from layouts.tabs_dynamic import create_dynamic_tabs
+
+from dashboard.dashboard_config import get_dataset_configs
 
 
 def create_main_layout(
@@ -20,10 +20,18 @@ def create_main_layout(
     month_names: list[str],
 ) -> html.Div:
     """Create the complete dashboard layout."""
+    # Get dataset configurations
+    dataset_configs = get_dataset_configs()
+
     return html.Div(
         [
             create_header(),
-            create_kpi_cards_section(),
+            # KPI Cards Section
+            html.Div(
+                id="kpi-cards-container",
+                className="kpi-cards-container",
+                style={"padding": "20px", "marginBottom": "20px"},
+            ),
             create_filters(
                 all_utilities,
                 available_months_by_year,
@@ -34,7 +42,7 @@ def create_main_layout(
                 end_month_default,
                 month_names,
             ),
-            create_tabs(),
+            create_dynamic_tabs(dataset_configs),
             create_footer(),
         ],
         style={

@@ -5,6 +5,23 @@ import polars as pl
 from nwec.constants import Utility
 
 
+def manual_cleaning(df: pl.DataFrame) -> pl.DataFrame:
+    """Apply manual cleaning steps to the utility data DataFrame.
+
+    Args:
+        df: Input DataFrame
+
+    Returns:
+        Manually cleaned DataFrame
+    """
+    # Remove rows containing "(blank)" or "(blanks)" in any column
+    for col in df.columns:
+        if df[col].dtype == pl.Utf8:
+            df = df.filter(~pl.col(col).str.to_lowercase().is_in(["(blank)", "(blanks)"]))
+
+    return df
+
+
 def clean_utility_data(df: pl.DataFrame, value_column_name: str) -> pl.DataFrame:
     """Clean utility data by removing empty/null values and converting columns to appropriate types.
 
@@ -35,6 +52,15 @@ def clean_utility_data(df: pl.DataFrame, value_column_name: str) -> pl.DataFrame
 
     if is_all_integers:
         df = df.with_columns(pl.col(value_column_name).cast(pl.Int64))
+
+    # Reorder columns: Utility, Year, Month should be first if they exist
+    columns_to_reorder = ["Utility", "Year", "Month"]
+    first_cols = [col for col in columns_to_reorder if col in df.columns]
+    remaining_cols = [col for col in df.columns if col not in first_cols]
+    if first_cols:
+        df = df.select(first_cols + remaining_cols)
+
+    df = manual_cleaning(df)
 
     return df
 
@@ -90,7 +116,7 @@ def _validate_value_column(df: pl.DataFrame, value_column_name: str) -> dict[str
     return errors
 
 
-def validate_data(df: pl.DataFrame, value_column_name: str) -> dict[str, list[str]]:
+def validate_data(df: pl.DataFrame, value_column_name: str) -> None:
     """Validate utility data and return any issues found.
 
     Args:
@@ -123,5 +149,4 @@ def validate_data(df: pl.DataFrame, value_column_name: str) -> dict[str, list[st
             for message in messages:
                 error_message += f"  - {field}: {message}\n"
         raise ValueError(error_message)
-
-    return errors
+    print("Data validation passed with no errors.")

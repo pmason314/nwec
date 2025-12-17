@@ -1,0 +1,36 @@
+pipelines:
+  - sheet_name: "Number of Disconnects"
+    core_value_column_name: "Number of Disconnects"
+    processed_file_name: "disconnections"
+  
+  - sheet_name: "Number of Disconnect Notices"
+    core_value_column_name: "Disconnection Notice Count"
+    processed_file_name: "disconnection_notices"
+  
+  - sheet_name: "No. of Customers w TPAs"
+    core_value_column_name: "Payment Agreement Customer Count"
+    processed_file_name: "payment_agreements"
+  
+  - sheet_name: "No. of Customers in Bill Assist"
+    core_value_column_name: "Bill Assist Customer Count"
+    processed_file_name: "bill_assist"
+  
+  - sheet_name: "No. Customers w Arrears"
+    core_value_column_name: "Arrearage Customer Count"
+    processed_file_name: "arrearage_counts"
+  
+  - sheet_name: "Total Uncollectible Arrears"
+    core_value_column_name: "Uncollectible Arrearage Amount"
+    processed_file_name: "uncollectible_arrears"
+  
+  - sheet_name: "No. Customers Refer to Agency"
+    core_value_column_name: "Collections Accounts Customer Count"
+    processed_file_name: "collection_agency_referrals"
+
+  - sheet_name: "Total Amount of Bad Debt"
+    core_value_column_name: "Bad Debt Amount"
+    processed_file_name: "bad_debt_amounts"
+
+  - sheet_name: "Revenue From Collection"
+    core_value_column_name: "Collections Revenue Amount"
+    processed_file_name: "collections_revenue"

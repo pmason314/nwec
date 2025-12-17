@@ -26,8 +26,10 @@ dependencies = [
     "plotly>=5.24.1",
     "polars>=1.6.0",
     "pyarrow>=21.0.0",
+    "pydantic>=2.10.4",
     "python-dateutil>=2.9.0.post0",
     "python-pptx>=1.0.2",
+    "pyyaml>=6.0.2",
     "requests>=2.32.3",
     "seaborn>=0.13.2",
 ]
@@ -62,7 +64,7 @@ ignore = [
     "D213",    # Docstring summary should start on the second line (alternative to D212)
     "EM",      # Assign exception strings to variables before raising them
     "ERA",     # Avoid commented-out code; check during CI/CD instead
-    "F401",    # Avoid unused imports (check during pre-commit instead or CI/CD instead)
+    "F401",    # Avoid unused imports (check during pre-commit instead and CI/CD instead)
     "FBT001",  # Avoid positional boolean arguments, checked via type hints
     "FBT002",  # Avoid positional boolean arguments, checked via default values
     "FIX002",  # Avoid TODO comments
@@ -71,7 +73,9 @@ ignore = [
     "S101",    # Avoid assert statements
     "S603",    # Avoid subprocess calls without validated input (prone to false positives)
     "S607",    # Avoid starting a process with a partial executable path
+    "T201",    # Avoid using print()
     "TD002",   # Missing author in TODO comment
+    "TD003",   # Missing issue link in TODO comment
     "TRY003",  # Avoid long exception messages outside the exception class
 ]
 unfixable = [

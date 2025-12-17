@@ -28,7 +28,7 @@ class Utility(Enum):
 PROJECT_ROOT = nwec.utils.get_project_root()
 DATA = PROJECT_ROOT / "data"
 RAW_UTILITY_DATA = DATA / "utility_reporting" / "raw"
-CLEAN_UTILITY_DATA = DATA / "utility_reporting" / "processed"
+PROCESSED_UTILITY_DATA = DATA / "utility_reporting" / "processed"
 REPORTS = DATA / "utility_reporting" / "reports"
 
 MONTHS = [
