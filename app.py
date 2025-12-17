@@ -13,8 +13,10 @@ from layouts.kpi_cards import build_kpi_cards
 from layouts.main_layout import create_main_layout
 
 # Load data
-DATA_PATH = Path(__file__).parent / "data" / "utility_reporting" / "processed" / "arrearage_counts.arrow"
-arrearage_counts = pl.read_ipc(DATA_PATH)
+DATA_PATH_COUNTS = Path(__file__).parent / "data" / "utility_reporting" / "processed" / "arrearage_counts.arrow"
+DATA_PATH_AMOUNTS = Path(__file__).parent / "data" / "utility_reporting" / "processed" / "arrearage_amounts.arrow"
+arrearage_counts = pl.read_ipc(DATA_PATH_COUNTS)
+arrearage_amounts = pl.read_ipc(DATA_PATH_AMOUNTS)
 
 # Initialize the Dash app with external stylesheets
 app = Dash(
@@ -26,7 +28,13 @@ server = app.server  # Expose the server for deployment
 
 # Get unique values for filters
 all_utilities = sorted(arrearage_counts["Utility"].unique().to_list())
-all_dates = sorted(arrearage_counts["Month"].unique().to_list())
+
+# Get unique year/month combinations from the data
+available_years = sorted(arrearage_counts["Year"].unique().to_list())
+available_months_by_year = {}
+for year in available_years:
+    months_in_year = arrearage_counts.filter(pl.col("Year") == year)["Month"].unique().to_list()
+    available_months_by_year[year] = sorted(months_in_year)
 
 # Create month and year options for dropdowns
 month_names = [
@@ -43,18 +51,16 @@ month_names = [
     "November",
     "December",
 ]
-available_years = sorted({date.year for date in all_dates})
-available_months_by_year = {}
-for year in available_years:
-    available_months_by_year[year] = sorted({date.month for date in all_dates if date.year == year})
 
 # Default start: first available month/year
-start_year_default = all_dates[0].year
-start_month_default = all_dates[0].month
+first_record = arrearage_counts.sort(["Year", "Month"]).head(1)
+start_year_default = first_record["Year"].item()
+start_month_default = first_record["Month"].item()
 
 # Default end: last available month/year
-end_year_default = all_dates[-1].year
-end_month_default = all_dates[-1].month
+last_record = arrearage_counts.sort(["Year", "Month"]).tail(1)
+end_year_default = last_record["Year"].item()
+end_month_default = last_record["Month"].item()
 
 # Create the layout using modular components
 app.layout = create_main_layout(
@@ -170,13 +176,13 @@ def update_end_month_options(selected_year: int) -> list[dict]:
     return [{"label": month_names[i - 1], "value": i + 1} for i in range(12)]
 
 
-# Callback to update KPI cards, chart subtitle, chart, and table
+# Callback to update KPI cards and counts visualizations
 @app.callback(
     [
         Output("kpi-cards", "children"),
-        Output("chart-subtitle", "children"),
-        Output("stacked-area-chart", "figure"),
-        Output("data-table", "data"),
+        Output("counts-chart-subtitle", "children"),
+        Output("counts-stacked-area-chart", "figure"),
+        Output("counts-data-table", "data"),
     ],
     [
         Input("start-month-picker", "value"),
@@ -186,20 +192,23 @@ def update_end_month_options(selected_year: int) -> list[dict]:
         Input("selected-utilities-store", "data"),
     ],
 )
-def update_dashboard(
+def update_counts_dashboard(
     start_month: int, start_year: int, end_month: int, end_year: int, selected_utilities: list[str]
 ) -> tuple[list[html.Div], str, go.Figure, list[dict]]:
     """Update the KPI cards, chart and table based on filter selections."""
-    # Convert month/year to datetime objects
-    start_date = datetime(start_year, start_month, 1, tzinfo=UTC) if start_month and start_year else all_dates[0]
-    end_date = datetime(end_year, end_month, 1, tzinfo=UTC) if end_month and end_year else all_dates[-1]
+    # Convert month/year to datetime objects for display
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
     # Ensure we have a list of utilities - if empty, show NO data
     if not selected_utilities:
         selected_utilities = []
 
+    # Add a Date column for easier filtering and charting
+    counts_with_date = arrearage_counts.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date"))
+
     # Filter by date range first
-    filtered_df = arrearage_counts.filter((pl.col("Month") >= start_date) & (pl.col("Month") <= end_date))
+    filtered_df = counts_with_date.filter((pl.col("Date") >= start_date) & (pl.col("Date") <= end_date))
 
     # Then filter by utilities - if none selected, return empty dataframe
     if selected_utilities:
@@ -225,7 +234,7 @@ def update_dashboard(
     unique_zips = unique_zips if unique_zips is not None else 0
 
     # Calculate trend (compare first and last month)
-    monthly_totals = filtered_df.group_by("Month").agg(pl.col("Arrearage Count").sum()).sort("Month")
+    monthly_totals = filtered_df.group_by("Date").agg(pl.col("Arrearage Count").sum()).sort("Date")
     if len(monthly_totals) >= 2:
         first_month = monthly_totals[0, "Arrearage Count"]
         last_month = monthly_totals[-1, "Arrearage Count"]
@@ -248,7 +257,7 @@ def update_dashboard(
     chart_subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
 
     # Aggregate data for the stacked area chart
-    chart_data = filtered_df.group_by(["Month", "Utility"]).agg(pl.col("Arrearage Count").sum()).sort("Month")
+    chart_data = filtered_df.group_by(["Date", "Utility"]).agg(pl.col("Arrearage Count").sum()).sort("Date")
 
     # Convert to pandas for Plotly
     chart_df = chart_data.to_pandas()
@@ -260,11 +269,11 @@ def update_dashboard(
 
     # Add traces for each utility
     for utility in selected_utilities if selected_utilities else all_utilities:
-        utility_data = chart_df[chart_df["Utility"] == utility].sort_values("Month")
+        utility_data = chart_df[chart_df["Utility"] == utility].sort_values("Date")
         if not utility_data.empty:
             fig.add_trace(
                 go.Scatter(
-                    x=utility_data["Month"],
+                    x=utility_data["Date"],
                     y=utility_data["Arrearage Count"],
                     name=utility,
                     mode="lines",
@@ -310,16 +319,17 @@ def update_dashboard(
 
     # Prepare table data
     table_df = filtered_df.to_pandas()
-    table_df["Month"] = table_df["Month"].dt.strftime("%b %Y")
+    table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
+    table_df = table_df.drop(columns=["Date", "Year"])  # Remove helper columns
     table_data = table_df.to_dict("records")
 
     return kpi_cards, chart_subtitle, fig, table_data
 
 
-# Callback for CSV download
+# Callback for counts CSV download
 @app.callback(
-    Output("download-dataframe-csv", "data"),
-    Input("download-btn", "n_clicks"),
+    Output("download-counts-csv", "data"),
+    Input("download-counts-btn", "n_clicks"),
     [
         Input("start-month-picker", "value"),
         Input("start-year-picker", "value"),
@@ -329,7 +339,7 @@ def update_dashboard(
     ],
     prevent_initial_call=True,
 )
-def download_csv(
+def download_counts_csv(
     n_clicks: int | None,
     start_month: int,
     start_year: int,
@@ -337,20 +347,23 @@ def download_csv(
     end_year: int,
     selected_utilities: list[str],
 ) -> dict | None:
-    """Download the filtered data as CSV."""
+    """Download the filtered counts data as CSV."""
     if n_clicks is None or n_clicks == 0:
         return None
 
     # Convert month/year to datetime objects
-    start_date = datetime(start_year, start_month, 1, tzinfo=UTC) if start_month and start_year else all_dates[0]
-    end_date = datetime(end_year, end_month, 1, tzinfo=UTC) if end_month and end_year else all_dates[-1]
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
     # Ensure we have a list of utilities - if empty, show NO data
     if not selected_utilities:
         selected_utilities = []
 
+    # Add a Date column for easier filtering
+    counts_with_date = arrearage_counts.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date"))
+
     # Filter by date range first
-    filtered_df = arrearage_counts.filter((pl.col("Month") >= start_date) & (pl.col("Month") <= end_date))
+    filtered_df = counts_with_date.filter((pl.col("Date") >= start_date) & (pl.col("Date") <= end_date))
 
     # Then filter by utilities - if none selected, return empty dataframe
     if selected_utilities:
@@ -361,10 +374,184 @@ def download_csv(
 
     # Convert to pandas and prepare for download
     table_df = filtered_df.to_pandas()
-    table_df["Month"] = table_df["Month"].dt.strftime("%b %Y")
+    table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
+    table_df = table_df.drop(columns=["Date"])  # Remove helper column but keep Year
     csv_string = table_df.to_csv(index=False)
 
     return {"content": csv_string, "filename": "arrearage_counts_export.csv"}
+
+
+# Callback to update amounts visualizations
+@app.callback(
+    [
+        Output("amounts-chart-subtitle", "children"),
+        Output("amounts-stacked-area-chart", "figure"),
+        Output("amounts-data-table", "data"),
+    ],
+    [
+        Input("start-month-picker", "value"),
+        Input("start-year-picker", "value"),
+        Input("end-month-picker", "value"),
+        Input("end-year-picker", "value"),
+        Input("selected-utilities-store", "data"),
+    ],
+)
+def update_amounts_dashboard(
+    start_month: int, start_year: int, end_month: int, end_year: int, selected_utilities: list[str]
+) -> tuple[str, go.Figure, list[dict]]:
+    """Update the amounts chart and table based on filter selections."""
+    # Convert month/year to datetime objects for display
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
+
+    # Ensure we have a list of utilities - if empty, show NO data
+    if not selected_utilities:
+        selected_utilities = []
+
+    # Create a Month column from Year and Month for filtering
+    amounts_with_date = arrearage_amounts.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date"))
+
+    # Filter by date range first
+    filtered_df = amounts_with_date.filter((pl.col("Date") >= start_date) & (pl.col("Date") <= end_date))
+
+    # Then filter by utilities - if none selected, return empty dataframe
+    if selected_utilities:
+        filtered_df = filtered_df.filter(pl.col("Utility").is_in(selected_utilities))
+    else:
+        # No utilities selected - return empty dataframe
+        filtered_df = filtered_df.filter(pl.lit(value=False))
+
+    # Filter for specific vintages only (exclude Total Arrearages)
+    chart_data = (
+        filtered_df.filter(pl.col("Vintage").is_in(["30 Days", "60 Days", "90 Days +"]))
+        .group_by(["Date", "Vintage"])
+        .agg(pl.col("Arrearage Amount").sum())
+        .sort("Date")
+    )
+
+    # Create chart subtitle
+    chart_subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
+
+    # Convert to pandas for Plotly
+    chart_df = chart_data.to_pandas()
+
+    # Create stacked area chart
+    fig = go.Figure()
+
+    # Colors for vintages - ordered from shortest to longest arrears
+    vintage_colors = {"30 Days": "#B4CEB3", "60 Days": "#FE5F55", "90 Days +": "#5C415D"}
+    vintage_order = ["30 Days", "60 Days", "90 Days +"]
+
+    # Add traces for each vintage
+    for vintage in vintage_order:
+        vintage_data = chart_df[chart_df["Vintage"] == vintage].sort_values("Date")
+        if not vintage_data.empty:
+            fig.add_trace(
+                go.Scatter(
+                    x=vintage_data["Date"],
+                    y=vintage_data["Arrearage Amount"],
+                    name=vintage,
+                    mode="lines",
+                    stackgroup="one",
+                    fillcolor=vintage_colors.get(vintage, "#cccccc"),
+                    line={"width": 0.5, "color": vintage_colors.get(vintage, "#cccccc")},
+                    hovertemplate=f"<b>{vintage}</b><br>$%{{y:,.2f}}<extra></extra>",
+                )
+            )
+
+    fig.update_layout(
+        xaxis_title="",
+        yaxis_title="Arrearage Amount ($)",
+        legend={
+            "title": {"text": "Vintage", "font": {"size": 14, "weight": 600}},
+            "orientation": "v",
+            "yanchor": "top",
+            "y": 1,
+            "xanchor": "left",
+            "x": 1.02,
+        },
+        hovermode="x unified",
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        height=550,
+        margin={"l": 60, "r": 140, "t": 20, "b": 60},
+        xaxis={
+            "tickformat": "%b-%y",
+            "showgrid": True,
+            "gridcolor": "#e1e8ed",
+            "gridwidth": 1,
+            "tickfont": {"size": 12},
+        },
+        yaxis={
+            "showgrid": True,
+            "gridcolor": "#e1e8ed",
+            "gridwidth": 1,
+            "tickformat": "$,.0f",
+            "tickfont": {"size": 12},
+        },
+        font={"family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"},
+    )
+
+    # Prepare table data (include all vintages)
+    table_df = filtered_df.to_pandas()
+    table_df = table_df.drop(columns=["Date"])  # Remove the helper Date column
+    table_data = table_df.to_dict("records")
+
+    return chart_subtitle, fig, table_data
+
+
+# Callback for amounts CSV download
+@app.callback(
+    Output("download-amounts-csv", "data"),
+    Input("download-amounts-btn", "n_clicks"),
+    [
+        Input("start-month-picker", "value"),
+        Input("start-year-picker", "value"),
+        Input("end-month-picker", "value"),
+        Input("end-year-picker", "value"),
+        Input("selected-utilities-store", "data"),
+    ],
+    prevent_initial_call=True,
+)
+def download_amounts_csv(
+    n_clicks: int | None,
+    start_month: int,
+    start_year: int,
+    end_month: int,
+    end_year: int,
+    selected_utilities: list[str],
+) -> dict | None:
+    """Download the filtered amounts data as CSV."""
+    if n_clicks is None or n_clicks == 0:
+        return None
+
+    # Convert month/year to datetime objects
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
+
+    # Ensure we have a list of utilities - if empty, show NO data
+    if not selected_utilities:
+        selected_utilities = []
+
+    # Create a Month column from Year and Month for filtering
+    amounts_with_date = arrearage_amounts.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date"))
+
+    # Filter by date range first
+    filtered_df = amounts_with_date.filter((pl.col("Date") >= start_date) & (pl.col("Date") <= end_date))
+
+    # Then filter by utilities - if none selected, return empty dataframe
+    if selected_utilities:
+        filtered_df = filtered_df.filter(pl.col("Utility").is_in(selected_utilities))
+    else:
+        # No utilities selected - return empty dataframe
+        filtered_df = filtered_df.filter(pl.lit(value=False))
+
+    # Convert to pandas and prepare for download
+    table_df = filtered_df.to_pandas()
+    table_df = table_df.drop(columns=["Date"])  # Remove the helper Date column
+    csv_string = table_df.to_csv(index=False)
+
+    return {"content": csv_string, "filename": "arrearage_amounts_export.csv"}
 
 
 if __name__ == "__main__":
