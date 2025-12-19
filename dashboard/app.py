@@ -7,10 +7,10 @@ from pathlib import Path
 
 import polars as pl
 from dash import ALL, Dash, Input, Output, ctx, html
-from layouts.main_layout import create_main_layout
 
 from dashboard.callbacks import create_dataset_callbacks
 from dashboard.dashboard_config import get_dataset_configs, load_dataset
+from dashboard.layouts.main_layout import create_main_layout
 
 # Get all available datasets
 dataset_configs = get_dataset_configs()
@@ -42,7 +42,7 @@ app = Dash(
     __name__,
     external_stylesheets=["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"],
     title="Utility Reporting Dashboard",
-    assets_folder=assets_path,
+    assets_folder=str(assets_path),
 )
 server = app.server  # Expose the server for deployment
 

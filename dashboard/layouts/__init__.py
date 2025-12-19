@@ -1,10 +1,10 @@
 """Layout components for the Arrearage Counts Dashboard."""
 
-from layouts.filters import create_filters
-from layouts.footer import create_footer
-from layouts.header import create_header
-from layouts.kpi_cards import create_kpi_cards_section
-from layouts.tabs import create_tabs
+from dashboard.layouts.filters import create_filters
+from dashboard.layouts.footer import create_footer
+from dashboard.layouts.header import create_header
+from dashboard.layouts.kpi_cards import create_kpi_cards_section
+from dashboard.layouts.tabs import create_tabs
 
 __all__ = [
     "create_filters",

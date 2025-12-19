@@ -1,12 +1,12 @@
 """Main layout assembly for the dashboard."""
 
 from dash import html
-from layouts.filters import create_filters
-from layouts.footer import create_footer
-from layouts.header import create_header
-from layouts.tabs_dynamic import create_dynamic_tabs
 
 from dashboard.dashboard_config import get_dataset_configs
+from dashboard.layouts.filters import create_filters
+from dashboard.layouts.footer import create_footer
+from dashboard.layouts.header import create_header
+from dashboard.layouts.tabs_dynamic import create_dynamic_tabs
 
 
 def create_main_layout(
