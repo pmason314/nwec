@@ -15,8 +15,10 @@ from dashboard.chart_builders import (
     create_stacked_bar_chart,
     create_stacked_line_chart,
 )
-from dashboard.dashboard_config import UTILITY_COLORS, UTILITY_DISPLAY_NAMES
+from dashboard.chart_config import ChartCallbackConfig
+from dashboard.dashboard_config import UTILITY_DISPLAY_NAMES
 from dashboard.utils import (
+    UTILITY_COLORS,
     aggregate_by_utility_date,
     filter_by_date_and_utilities,
     get_subtitle_text,
@@ -178,32 +180,20 @@ def create_individual_trendlines_callback(
 def create_stacked_bar_callback(
     app: Dash,
     dataset: pl.DataFrame,
-    chart_id: str,
-    subtitle_id: str,
-    value_column: str,
-    y_axis_title: str,
-    is_amount: bool = False,
-    height: int = 550,
-    add_trendline: bool = False,
+    callback_config: ChartCallbackConfig,
 ) -> None:
     """Factory to create stacked bar chart callback.
 
     Args:
         app: Dash app instance
         dataset: Polars dataframe with data
-        chart_id: ID for the chart output
-        subtitle_id: ID for the subtitle output
-        value_column: Name of the column to plot
-        y_axis_title: Title for y-axis
-        is_amount: Whether values are currency amounts
-        height: Chart height in pixels
-        add_trendline: Whether to add trendline
+        callback_config: Configuration for chart and callback (chart_id, subtitle_id, and ChartConfig)
     """
 
     @app.callback(
         [
-            Output(chart_id, "figure"),
-            Output(subtitle_id, "children"),
+            Output(callback_config.chart_id, "figure"),
+            Output(callback_config.subtitle_id, "children"),
         ],
         [
             Input("start-month-picker", "value"),
@@ -226,18 +216,14 @@ def create_stacked_bar_callback(
         )
 
         # Aggregate by utility and date
-        df_agg = aggregate_by_utility_date(df_filtered, value_column)
+        df_agg = aggregate_by_utility_date(df_filtered, callback_config.config.value_column)
 
         # Create chart
         fig = create_stacked_bar_chart(
             data=df_agg,
             utilities=selected_utilities or [],
-            value_column=value_column,
-            y_axis_title=y_axis_title,
             utility_colors=UTILITY_COLORS,
-            is_amount=is_amount,
-            height=height,
-            add_trendline=add_trendline,
+            config=callback_config.config,
         )
 
         # Generate subtitle

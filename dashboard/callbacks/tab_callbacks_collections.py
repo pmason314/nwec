@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from dashboard.callback_factories import (
+from dashboard.callbacks.callback_factories import (
     create_csv_download_callback,
     create_data_table_callback,
     create_stacked_line_callback,

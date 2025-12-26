@@ -16,15 +16,6 @@ UTILITY_DISPLAY_NAMES = {
     "NWN": "Northwest Natural Gas (NWN)",
 }
 
-# Utility button colors
-UTILITY_COLORS = {
-    "Avista": "#003768",
-    "PSE": "#2596be",
-    "PAC": "#e90028",
-    "CNG": "#6c757d",  # Bootstrap gray-600 for visual distinction
-    "NWN": "#54b266",
-}
-
 
 @dataclass
 class DatasetConfig:

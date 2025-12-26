@@ -2,7 +2,8 @@
 
 from dash import dcc, html
 
-from dashboard.dashboard_config import UTILITY_COLORS, UTILITY_DISPLAY_NAMES
+from dashboard.dashboard_config import UTILITY_DISPLAY_NAMES
+from dashboard.utils import UTILITY_COLORS
 
 
 def create_filters(

@@ -5,6 +5,15 @@ from datetime import UTC, datetime
 import polars as pl
 from scipy import stats
 
+# Utility button colors
+UTILITY_COLORS = {
+    "Avista": "#003768",
+    "PSE": "#2596be",
+    "PAC": "#e90028",
+    "CNG": "#6c757d",
+    "NWN": "#54b266",
+}
+
 
 def filter_by_date_and_utilities(
     df: pl.DataFrame,

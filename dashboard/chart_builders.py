@@ -4,6 +4,7 @@ import polars as pl
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 
+from dashboard.chart_config import ChartConfig
 from dashboard.styles import (
     CHART_GRID_STYLE,
     get_bar_chart_layout,
@@ -242,26 +243,16 @@ def create_single_trendline_chart(
 def create_stacked_bar_chart(
     data: pl.DataFrame,
     utilities: list[str],
-    value_column: str,
-    y_axis_title: str,
     utility_colors: dict[str, str],
-    is_amount: bool = False,
-    height: int = 550,
-    add_trendline: bool = False,
-    trendline_color: str = "#e74c3c",
+    config: ChartConfig,
 ) -> go.Figure:
     """Create stacked bar chart.
 
     Args:
         data: Dataframe with columns [Utility, Date, value_column]
         utilities: List of utilities to include (in order)
-        value_column: Name of the value column to plot
-        y_axis_title: Title for y-axis
         utility_colors: Dictionary mapping utility names to colors
-        is_amount: Whether values are currency amounts
-        height: Chart height in pixels
-        add_trendline: Whether to add a trendline to the total
-        trendline_color: Color for trendline
+        config: Chart configuration (value_column, y_axis_title, is_amount, height, add_trendline, trendline_color)
 
     Returns:
         Plotly Figure object
@@ -276,19 +267,19 @@ def create_stacked_bar_chart(
             fig.add_trace(
                 go.Bar(
                     x=utility_data["Date"].to_list(),
-                    y=utility_data[value_column].to_list(),
+                    y=utility_data[config.value_column].to_list(),
                     name=utility,
                     marker_color=utility_colors.get(utility, "#95a5a6"),
                 )
             )
 
     # Add trendline if requested
-    if add_trendline:
+    if config.add_trendline:
         # Calculate total across utilities
-        total_data = data.group_by("Date").agg(pl.col(value_column).sum()).sort("Date")
+        total_data = data.group_by("Date").agg(pl.col(config.value_column).sum()).sort("Date")
 
         dates = total_data["Date"].to_list()
-        y_values = total_data[value_column].to_list()
+        y_values = total_data[config.value_column].to_list()
 
         if len(dates) >= 2:
             trendline_y, _, _ = calculate_trendline(dates, y_values)
@@ -299,13 +290,13 @@ def create_stacked_bar_chart(
                     y=trendline_y,
                     mode="lines",
                     name="Trendline",
-                    line={"width": 3, "color": trendline_color, "dash": "dash"},
+                    line={"width": 3, "color": config.trendline_color, "dash": "dash"},
                     yaxis="y",
                 )
             )
 
     # Apply layout
-    layout = get_bar_chart_layout(y_axis_title, height, is_amount, barmode="stack")
+    layout = get_bar_chart_layout(config.y_axis_title, config.height, config.is_amount, barmode="stack")
     fig.update_layout(layout)
 
     return fig

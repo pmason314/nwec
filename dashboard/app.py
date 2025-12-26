@@ -8,19 +8,19 @@ from pathlib import Path
 import polars as pl
 from dash import ALL, Dash, Input, Output, ctx, html
 
-from dashboard.callbacks import create_dataset_callbacks
-from dashboard.callbacks_bill_assistance import create_bill_assistance_callbacks
-from dashboard.callbacks_collections import create_collections_callbacks
-from dashboard.callbacks_disconnections import create_disconnections_callbacks
-from dashboard.callbacks_past_due_balances import create_past_due_balances_callbacks
+from dashboard.callbacks.dataset_callbacks import create_dataset_callbacks
+from dashboard.callbacks.tab_callbacks_bill_assistance import create_bill_assistance_callbacks
+from dashboard.callbacks.tab_callbacks_collections import create_collections_callbacks
+from dashboard.callbacks.tab_callbacks_disconnections import create_disconnections_callbacks
+from dashboard.callbacks.tab_callbacks_past_due_balances import create_past_due_balances_callbacks
 from dashboard.dashboard_config import (
-    UTILITY_COLORS,
     UTILITY_DISPLAY_NAMES,
     get_dataset_configs,
     load_dataset,
 )
 from dashboard.layouts.kpi_cards import build_kpi_cards
 from dashboard.layouts.main_layout import create_main_layout
+from dashboard.utils import UTILITY_COLORS
 
 # Get all available datasets
 dataset_configs = get_dataset_configs()
