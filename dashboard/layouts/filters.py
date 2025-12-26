@@ -2,6 +2,8 @@
 
 from dash import dcc, html
 
+from dashboard.dashboard_config import UTILITY_COLORS, UTILITY_DISPLAY_NAMES
+
 
 def create_filters(
     all_utilities: list[str],
@@ -14,6 +16,12 @@ def create_filters(
     month_names: list[str],
 ) -> html.Div:
     """Create the filters section with date range and utility chips."""
+    # Sort utilities by display name length (shortest first)
+    sorted_utilities = sorted(
+        all_utilities,
+        key=lambda u: len(UTILITY_DISPLAY_NAMES.get(u, u)),
+    )
+
     return html.Div(
         [
             html.H3(
@@ -22,18 +30,26 @@ def create_filters(
                     "marginTop": 0,
                     "marginBottom": "20px",
                     "color": "#2c3e50",
-                    "fontSize": "20px",
-                    "fontWeight": "600",
+                    "fontSize": "24px",
+                    "fontWeight": "700",
                 },
             ),
+            # Two-column layout: Date range on left, Utility selection on right
             html.Div(
                 [
-                    html.Label(
-                        "Select Date Range:",
-                        style={"fontWeight": "600", "color": "#2c3e50", "marginBottom": "15px", "display": "block"},
-                    ),
+                    # Left column: Date Range (in card)
                     html.Div(
                         [
+                            html.Label(
+                                "Select Date Range:",
+                                style={
+                                    "fontWeight": "600",
+                                    "color": "#2c3e50",
+                                    "marginBottom": "20px",
+                                    "display": "block",
+                                    "fontSize": "18px",
+                                },
+                            ),
                             # Start date selectors
                             html.Div(
                                 [
@@ -86,11 +102,7 @@ def create_filters(
                                     ),
                                 ],
                                 style={
-                                    "flex": "0 0 320px",
-                                    "padding": "15px",
-                                    "backgroundColor": "#f8f9fa",
-                                    "borderRadius": "8px",
-                                    "border": "1px solid #e0e0e0",
+                                    "marginBottom": "20px",
                                 },
                             ),
                             # End date selectors
@@ -144,22 +156,27 @@ def create_filters(
                                         style={"display": "flex", "gap": "10px"},
                                     ),
                                 ],
-                                style={
-                                    "flex": "0 0 320px",
-                                    "padding": "15px",
-                                    "backgroundColor": "#f8f9fa",
-                                    "borderRadius": "8px",
-                                    "border": "1px solid #e0e0e0",
-                                },
                             ),
                         ],
-                        style={"display": "flex", "gap": "20px"},
+                        style={
+                            "flex": "0 0 auto",
+                            "minWidth": "380px",
+                            "padding": "25px",
+                            "backgroundColor": "#f8f9fa",
+                            "borderRadius": "8px",
+                            "border": "1px solid #e0e0e0",
+                            "boxShadow": "0 1px 3px rgba(0,0,0,0.05)",
+                        },
                     ),
-                ],
-                style={"marginBottom": 25},
-            ),
-            html.Div(
-                [
+                    # Subtle divider
+                    html.Div(
+                        style={
+                            "width": "1px",
+                            "backgroundColor": "#d0d0d0",
+                            "alignSelf": "stretch",
+                        }
+                    ),
+                    # Right column: Utility Selection (in card)
                     html.Div(
                         [
                             html.Label(
@@ -167,8 +184,10 @@ def create_filters(
                                 style={
                                     "fontWeight": "600",
                                     "color": "#2c3e50",
-                                    "marginBottom": "10px",
+                                    "marginBottom": "15px",
                                     "display": "block",
+                                    "fontSize": "18px",
+                                    "textAlign": "center",
                                 },
                             ),
                             html.Div(
@@ -179,14 +198,16 @@ def create_filters(
                                         n_clicks=0,
                                         style={
                                             "marginRight": "10px",
-                                            "padding": "6px 16px",
+                                            "padding": "10px 24px",
                                             "backgroundColor": "#156570",
                                             "color": "white",
                                             "border": "none",
-                                            "borderRadius": "4px",
+                                            "borderRadius": "6px",
                                             "cursor": "pointer",
-                                            "fontSize": "14px",
-                                            "fontWeight": "500",
+                                            "fontSize": "15px",
+                                            "fontWeight": "600",
+                                            "boxShadow": "0 2px 6px rgba(21, 101, 112, 0.3)",
+                                            "transition": "all 0.2s ease",
                                         },
                                     ),
                                     html.Button(
@@ -194,62 +215,87 @@ def create_filters(
                                         id="clear-all-btn",
                                         n_clicks=0,
                                         style={
-                                            "padding": "6px 16px",
+                                            "padding": "10px 24px",
                                             "backgroundColor": "#95a5a6",
                                             "color": "white",
                                             "border": "none",
-                                            "borderRadius": "4px",
+                                            "borderRadius": "6px",
                                             "cursor": "pointer",
-                                            "fontSize": "14px",
-                                            "fontWeight": "500",
+                                            "fontSize": "15px",
+                                            "fontWeight": "600",
+                                            "boxShadow": "0 2px 6px rgba(149, 165, 166, 0.3)",
+                                            "transition": "all 0.2s ease",
                                         },
                                     ),
                                 ],
-                                style={"marginBottom": "15px"},
-                            ),
-                        ],
-                    ),
-                    # Utility chips
-                    html.Div(
-                        id="utility-chips-container",
-                        children=[
-                            html.Button(
-                                util,
-                                id={"type": "utility-chip", "index": util},
-                                n_clicks=0,
                                 style={
-                                    "padding": "10px 20px",
-                                    "margin": "5px",
-                                    "backgroundColor": "#156570",
-                                    "color": "white",
-                                    "border": "2px solid #156570",
-                                    "borderRadius": "25px",
-                                    "cursor": "pointer",
-                                    "fontSize": "14px",
-                                    "fontWeight": "500",
-                                    "transition": "all 0.3s ease",
-                                    "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                                    "marginBottom": "20px",
+                                    "display": "flex",
+                                    "justifyContent": "center",
                                 },
-                            )
-                            for util in all_utilities
+                            ),
+                            # Utility chips
+                            html.Div(
+                                id="utility-chips-container",
+                                children=[
+                                    html.Button(
+                                        UTILITY_DISPLAY_NAMES.get(util, util),
+                                        id={"type": "utility-chip", "index": util},
+                                        n_clicks=0,
+                                        style={
+                                            "padding": "10px 20px",
+                                            "backgroundColor": UTILITY_COLORS.get(util, "#003768"),
+                                            "color": "white",
+                                            "border": f"2px solid {UTILITY_COLORS.get(util, '#003768')}",
+                                            "borderRadius": "25px",
+                                            "cursor": "pointer",
+                                            "fontSize": "14px",
+                                            "fontWeight": "500",
+                                            "transition": "all 0.3s ease",
+                                            "boxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+                                            "display": "inline-block",
+                                        },
+                                    )
+                                    for util in sorted_utilities
+                                ],
+                                style={
+                                    "display": "grid",
+                                    "gridTemplateColumns": "repeat(3, auto)",
+                                    "gap": "10px",
+                                    "justifyContent": "center",
+                                },
+                            ),
+                            # Hidden storage for selected utilities
+                            dcc.Store(id="selected-utilities-store", data=all_utilities),
                         ],
                         style={
-                            "display": "flex",
-                            "flexWrap": "wrap",
-                            "gap": "5px",
+                            "flex": "0 0 auto",
+                            "minWidth": "380px",
+                            "padding": "25px",
+                            "backgroundColor": "#f8f9fa",
+                            "borderRadius": "8px",
+                            "border": "1px solid #e0e0e0",
+                            "boxShadow": "0 1px 3px rgba(0,0,0,0.05)",
                         },
                     ),
-                    # Hidden storage for selected utilities
-                    dcc.Store(id="selected-utilities-store", data=all_utilities),
                 ],
+                style={
+                    "display": "flex",
+                    "alignItems": "stretch",
+                    "justifyContent": "center",
+                    "gap": "30px",
+                },
             ),
         ],
         style={
-            "padding": "25px",
+            "padding": "30px 50px",
             "backgroundColor": "white",
             "borderRadius": "8px",
             "marginBottom": "30px",
             "boxShadow": "0 2px 8px rgba(0,0,0,0.08)",
             "border": "1px solid #e1e8ed",
+            "maxWidth": "1400px",
+            "marginLeft": "auto",
+            "marginRight": "auto",
         },
     )

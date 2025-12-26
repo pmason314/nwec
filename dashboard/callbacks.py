@@ -98,7 +98,9 @@ def create_dataset_callbacks(app: Dash, config: DatasetConfig, all_utilities: li
                     )
                 )
 
-        y_axis_title = f"{config.value_column} ($)" if config.is_amount else config.value_column
+        # Display-friendly axis title: replace 'Arrearage' with 'Past-Due Balance' for UI
+        display_value_label = config.value_column.replace("Arrearage", "Past-Due Balance")
+        y_axis_title = f"{display_value_label} ($)" if config.is_amount else display_value_label
         tick_format = "$,.0f" if config.is_amount else ",.0f"
 
         fig.update_layout(

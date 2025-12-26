@@ -1,4 +1,4 @@
-"""Layout components for the Arrearage Counts Dashboard."""
+"""Layout components for the Past-Due Balances Dashboard."""
 
 from dashboard.layouts.filters import create_filters
 from dashboard.layouts.footer import create_footer

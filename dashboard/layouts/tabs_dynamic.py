@@ -2,6 +2,8 @@
 
 from dash import dash_table, dcc, html
 
+from dashboard.layouts.about import create_about_tab
+
 
 def create_dataset_subtabs(
     dataset_id: str, dataset_name: str, value_column: str, is_amount: bool = False, has_vintage: bool = False
@@ -26,9 +28,11 @@ def create_dataset_subtabs(
     ]
     if has_vintage:
         table_columns.append({"name": "Vintage", "id": "Vintage"})
+    # Display-friendly column name: replace 'Arrearage' with 'Past-Due Balance' in UI
+    display_value_name = value_column.replace("Arrearage", "Past-Due Balance")
     table_columns.append(
         {
-            "name": value_column,
+            "name": display_value_name,
             "id": value_column,
             "type": "numeric",
             "format": value_format,
@@ -220,7 +224,7 @@ def create_dynamic_tabs(dataset_configs: list) -> dcc.Tabs:
     Args:
         dataset_configs: List of DatasetConfig objects
     """
-    tab_children = []
+    tab_children = [create_about_tab()]
 
     for config in dataset_configs:
         dataset_id = config.file_name.replace("_", "-")
@@ -252,7 +256,7 @@ def create_dynamic_tabs(dataset_configs: list) -> dcc.Tabs:
 
     return dcc.Tabs(
         id="main-tabs",
-        value=f"{dataset_configs[0].file_name.replace('_', '-')}-tab" if dataset_configs else "tab1",
+        value="about-tab",
         children=tab_children,
         style={"marginBottom": "30px"},
     )

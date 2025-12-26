@@ -9,7 +9,12 @@ import polars as pl
 from dash import ALL, Dash, Input, Output, ctx, html
 
 from dashboard.callbacks import create_dataset_callbacks
-from dashboard.dashboard_config import get_dataset_configs, load_dataset
+from dashboard.dashboard_config import (
+    UTILITY_COLORS,
+    UTILITY_DISPLAY_NAMES,
+    get_dataset_configs,
+    load_dataset,
+)
 from dashboard.layouts.main_layout import create_main_layout
 
 # Get all available datasets
@@ -41,7 +46,7 @@ assets_path = Path(__file__).parent.parent / "assets"
 app = Dash(
     __name__,
     external_stylesheets=["https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"],
-    title="Utility Reporting Dashboard",
+    title="Energy Affordability Dashboard",
     assets_folder=str(assets_path),
 )
 server = app.server  # Expose the server for deployment
@@ -140,26 +145,35 @@ def update_utility_selection(
 
 def create_chips(selected_utilities: list[str]) -> list:
     """Create chip components with proper styling based on selection state."""
+    # Sort utilities by display name length (shortest first)
+    sorted_utilities = sorted(
+        all_utilities,
+        key=lambda u: len(UTILITY_DISPLAY_NAMES.get(u, u)),
+    )
+
     chips = []
-    for util in all_utilities:
+    for util in sorted_utilities:
         is_selected = util in selected_utilities
+        util_color = UTILITY_COLORS.get(util, "#003768")
+        display_name = UTILITY_DISPLAY_NAMES.get(util, util)
         chips.append(
             html.Button(
-                util,
+                display_name,
                 id={"type": "utility-chip", "index": util},
                 n_clicks=0,
                 style={
                     "padding": "10px 20px",
-                    "margin": "5px",
-                    "backgroundColor": "#156570" if is_selected else "white",
-                    "color": "white" if is_selected else "#156570",
-                    "border": "2px solid #156570",
+                    "margin": "5px 0",
+                    "backgroundColor": util_color if is_selected else "white",
+                    "color": "white" if is_selected else util_color,
+                    "border": f"2px solid {util_color}",
                     "borderRadius": "25px",
                     "cursor": "pointer",
                     "fontSize": "14px",
                     "fontWeight": "500",
                     "transition": "all 0.3s ease",
                     "boxShadow": "0 2px 4px rgba(0,0,0,0.1)" if is_selected else "0 1px 3px rgba(0,0,0,0.05)",
+                    "display": "inline-block",
                 },
             )
         )
@@ -195,49 +209,85 @@ for config in dataset_configs:
     create_dataset_callbacks(app, config, all_utilities)
 
 
-# Simple KPI cards callback with placeholders
+# KPI cards callback to show statewide metrics
 @app.callback(
     Output("kpi-cards-container", "children"),
-    Input("selected-utilities-store", "data"),
+    [
+        Input("start-month-picker", "value"),
+        Input("start-year-picker", "value"),
+        Input("end-month-picker", "value"),
+        Input("end-year-picker", "value"),
+        Input("selected-utilities-store", "data"),
+    ],
 )
-def update_kpi_cards(selected_utilities: list[str]) -> list:
-    """Update KPI cards with simple placeholder values."""
-    num_utilities = len(selected_utilities) if selected_utilities else 0
+def update_kpi_cards(
+    start_month: int, start_year: int, end_month: int, end_year: int, selected_utilities: list[str]
+) -> list:
+    """Update KPI cards with statewide metrics based on filters."""
+    from dashboard.layouts.kpi_cards import build_kpi_cards
 
-    return [
-        html.Div(
-            [
-                html.Div("Total Records", className="kpi-card-title"),
-                html.Div("10,000", className="kpi-card-value"),
-                html.Div("Placeholder", className="kpi-card-subtitle"),
-            ],
-            className="kpi-card",
-        ),
-        html.Div(
-            [
-                html.Div("Active Utilities", className="kpi-card-title"),
-                html.Div(str(num_utilities), className="kpi-card-value"),
-                html.Div(f"of {len(all_utilities)} total", className="kpi-card-subtitle"),
-            ],
-            className="kpi-card",
-        ),
-        html.Div(
-            [
-                html.Div("Avg Monthly", className="kpi-card-title"),
-                html.Div("500", className="kpi-card-value"),
-                html.Div("Placeholder", className="kpi-card-subtitle"),
-            ],
-            className="kpi-card",
-        ),
-        html.Div(
-            [
-                html.Div("Unique Zips", className="kpi-card-title"),
-                html.Div("50", className="kpi-card-value"),
-                html.Div("Placeholder", className="kpi-card-subtitle"),
-            ],
-            className="kpi-card",
-        ),
-    ]
+    # Convert month/year to datetime objects
+    start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+    end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
+
+    # Create date range text for subtitle
+    date_range_text = f"{start_date.strftime('%b %Y')} - {end_date.strftime('%b %Y')}"
+
+    # If no utilities selected, show zeros
+    if not selected_utilities:
+        return build_kpi_cards(
+            total_customers_with_arrearages=0,
+            total_arrearage_amount=0.0,
+            total_disconnections=0,
+            total_bill_assistance=0.0,
+            date_range_text=date_range_text,
+        )
+
+    # Load datasets
+    arrearage_counts = load_dataset("arrearage_counts").with_columns(
+        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+    )
+    arrearage_amounts = load_dataset("arrearage_amounts").with_columns(
+        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+    )
+    disconnections = load_dataset("disconnections").with_columns(
+        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+    )
+    bill_assist = load_dataset("bill_assist").with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date"))
+
+    # Filter by date range and utilities
+    arrearage_counts_filtered = arrearage_counts.filter(
+        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
+    )
+    arrearage_amounts_filtered = arrearage_amounts.filter(
+        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
+    )
+    disconnections_filtered = disconnections.filter(
+        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
+    )
+    bill_assist_filtered = bill_assist.filter(
+        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
+    )
+
+    # Calculate totals
+    total_customers = arrearage_counts_filtered.select(pl.col("Arrearage Customer Count").sum()).item()
+    total_amount = arrearage_amounts_filtered.select(pl.col("Arrearage_Amount").sum()).item()
+    total_disconnects = disconnections_filtered.select(pl.col("Number of Disconnects").sum()).item()
+    total_assist = bill_assist_filtered.select(pl.col("Bill Assist Customer Count").sum()).item()
+
+    # Handle None values
+    total_customers = total_customers if total_customers is not None else 0
+    total_amount = total_amount if total_amount is not None else 0.0
+    total_disconnects = total_disconnects if total_disconnects is not None else 0
+    total_assist = total_assist if total_assist is not None else 0.0
+
+    return build_kpi_cards(
+        total_customers_with_arrearages=total_customers,
+        total_arrearage_amount=total_amount,
+        total_disconnections=total_disconnects,
+        total_bill_assistance=total_assist,
+        date_range_text=date_range_text,
+    )
 
 
 if __name__ == "__main__":
