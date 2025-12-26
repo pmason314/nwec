@@ -130,7 +130,7 @@
 
 ## Styling
 
-- [ ] For graphics, use the following colors for each utility (based on their company colors/logo):
+- [x] For graphics, use the following colors for each utility (based on their company colors/logo):
   - Avista: navy blue
   - PSE: teal
   - PAC: red

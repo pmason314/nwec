@@ -66,7 +66,7 @@ def create_dataset_callbacks(app: Dash, config: DatasetConfig, all_utilities: li
         chart_data = filtered_df.group_by(["Date", "Utility"]).agg(pl.col(config.value_column).sum()).sort("Date")
 
         # Create chart subtitle
-        chart_subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
+        chart_subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
 
         # Convert to pandas for Plotly
         chart_df = chart_data.to_pandas()

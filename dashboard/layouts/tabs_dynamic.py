@@ -3,6 +3,10 @@
 from dash import dash_table, dcc, html
 
 from dashboard.layouts.about import create_about_tab
+from dashboard.layouts.tab_bill_assistance import create_bill_assistance_tab
+from dashboard.layouts.tab_collections import create_collections_tab
+from dashboard.layouts.tab_disconnections import create_disconnections_tab
+from dashboard.layouts.tab_past_due_balances import create_past_due_balances_tab
 
 
 def create_dataset_subtabs(
@@ -224,9 +228,32 @@ def create_dynamic_tabs(dataset_configs: list) -> dcc.Tabs:
     Args:
         dataset_configs: List of DatasetConfig objects
     """
-    tab_children = [create_about_tab()]
+    # Start with About tab, then add comprehensive tabs
+    tab_children = [
+        create_about_tab(),
+        create_past_due_balances_tab(),
+        create_disconnections_tab(),
+        create_bill_assistance_tab(),
+        create_collections_tab(),
+    ]
+
+    # Add other dataset tabs (excluding datasets that have comprehensive tabs)
+    excluded_datasets = {
+        "arrearage_counts",
+        "arrearage_amounts",
+        "kli_arrearage_amounts",
+        "disconnections",
+        "disconnection_notices",
+        "bill_assist",
+        "payment_agreements",
+        "collection_agency_referrals",
+    }
 
     for config in dataset_configs:
+        # Skip arrearage datasets as they're now in the comprehensive Past-Due Balances tab
+        if config.file_name in excluded_datasets:
+            continue
+
         dataset_id = config.file_name.replace("_", "-")
 
         # Check if dataset has Vintage column

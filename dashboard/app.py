@@ -9,6 +9,10 @@ import polars as pl
 from dash import ALL, Dash, Input, Output, ctx, html
 
 from dashboard.callbacks import create_dataset_callbacks
+from dashboard.callbacks_bill_assistance import create_bill_assistance_callbacks
+from dashboard.callbacks_collections import create_collections_callbacks
+from dashboard.callbacks_disconnections import create_disconnections_callbacks
+from dashboard.callbacks_past_due_balances import create_past_due_balances_callbacks
 from dashboard.dashboard_config import (
     UTILITY_COLORS,
     UTILITY_DISPLAY_NAMES,
@@ -204,9 +208,28 @@ def update_end_month_options(selected_year: int) -> list[dict]:
     return [{"label": month_names[i - 1], "value": i + 1} for i in range(12)]
 
 
-# Create dynamic callbacks for all datasets
+# Create dynamic callbacks for all datasets (excluding datasets with comprehensive tabs)
+excluded_datasets = {
+    "arrearage_counts",
+    "arrearage_amounts",
+    "kli_arrearage_amounts",
+    "disconnections",
+    "disconnection_notices",
+    "bill_assist",
+    "payment_agreements",
+    "collection_agency_referrals",
+}
+
 for config in dataset_configs:
-    create_dataset_callbacks(app, config, all_utilities)
+    # Skip datasets that have comprehensive tabs
+    if config.file_name not in excluded_datasets:
+        create_dataset_callbacks(app, config, all_utilities)
+
+# Create callbacks for comprehensive tabs
+create_past_due_balances_callbacks(app, all_utilities)
+create_disconnections_callbacks(app, all_utilities)
+create_bill_assistance_callbacks(app, all_utilities)
+create_collections_callbacks(app, all_utilities)
 
 
 # KPI cards callback to show statewide metrics
