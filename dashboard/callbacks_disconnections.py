@@ -349,8 +349,12 @@ def create_disconnections_callbacks(app: Dash, all_utilities: list[str]) -> None
         else:
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
+        # Sort by Date for chronological order before formatting
+        filtered_df = filtered_df.sort(["Utility", "Date", "Zip Code"])
         table_df = filtered_df.to_pandas()
-        table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
+        # Format Month as YYYY-MM for sortable display
+        table_df["Month"] = table_df["Date"].dt.strftime("%Y-%m")
+        # Drop Date column, only keep Month
         table_df = table_df[["Utility", "Zip Code", "Month", "Number of Disconnects"]]
         return table_df.to_dict("records")
 
@@ -383,8 +387,12 @@ def create_disconnections_callbacks(app: Dash, all_utilities: list[str]) -> None
         else:
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
+        # Sort by Date for chronological order before formatting
+        filtered_df = filtered_df.sort(["Utility", "Date", "Zip Code"])
         table_df = filtered_df.to_pandas()
-        table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
+        # Format Month as YYYY-MM for sortable display
+        table_df["Month"] = table_df["Date"].dt.strftime("%Y-%m")
+        # Drop Date column, only keep Month
         table_df = table_df[["Utility", "Zip Code", "Month", "Disconnection Notice Count"]]
         return table_df.to_dict("records")
 

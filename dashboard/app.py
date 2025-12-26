@@ -19,6 +19,7 @@ from dashboard.dashboard_config import (
     get_dataset_configs,
     load_dataset,
 )
+from dashboard.layouts.kpi_cards import build_kpi_cards
 from dashboard.layouts.main_layout import create_main_layout
 
 # Get all available datasets
@@ -228,8 +229,8 @@ for config in dataset_configs:
 # Create callbacks for comprehensive tabs
 create_past_due_balances_callbacks(app, all_utilities)
 create_disconnections_callbacks(app, all_utilities)
-create_bill_assistance_callbacks(app, all_utilities)
-create_collections_callbacks(app, all_utilities)
+create_bill_assistance_callbacks(app)
+create_collections_callbacks(app)
 
 
 # KPI cards callback to show statewide metrics
@@ -247,14 +248,9 @@ def update_kpi_cards(
     start_month: int, start_year: int, end_month: int, end_year: int, selected_utilities: list[str]
 ) -> list:
     """Update KPI cards with statewide metrics based on filters."""
-    from dashboard.layouts.kpi_cards import build_kpi_cards
-
     # Convert month/year to datetime objects
     start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
     end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
-
-    # Create date range text for subtitle
-    date_range_text = f"{start_date.strftime('%b %Y')} - {end_date.strftime('%b %Y')}"
 
     # If no utilities selected, show zeros
     if not selected_utilities:
@@ -263,7 +259,6 @@ def update_kpi_cards(
             total_arrearage_amount=0.0,
             total_disconnections=0,
             total_bill_assistance=0.0,
-            date_range_text=date_range_text,
         )
 
     # Load datasets
@@ -309,7 +304,6 @@ def update_kpi_cards(
         total_arrearage_amount=total_amount,
         total_disconnections=total_disconnects,
         total_bill_assistance=total_assist,
-        date_range_text=date_range_text,
     )
 
 

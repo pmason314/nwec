@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import polars as pl
 from dash import Dash, Input, Output
@@ -212,7 +213,7 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
 
                 # Calculate and add trendline
                 x_numeric = np.arange(len(utility_data))
-                y_values = utility_data["Arrearage Customer Count"].values
+                y_values = utility_data["Arrearage Customer Count"].to_numpy()
                 slope, intercept, _, _, _ = stats.linregress(x_numeric, y_values)
                 trendline = slope * x_numeric + intercept
 
@@ -592,7 +593,7 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
 
         if len(total_by_date) > 1:
             x_numeric = np.arange(len(total_by_date))
-            y_values = total_by_date["Arrearage_Amount"].values
+            y_values = total_by_date["Arrearage_Amount"].to_numpy()
             slope, intercept, _, _, _ = stats.linregress(x_numeric, y_values)
             trendline = slope * x_numeric + intercept
 
@@ -686,7 +687,7 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
                 go.Pie(
                     labels=chart_data["Vintage"],
                     values=chart_data["Arrearage_Amount"],
-                    marker=dict(colors=[vintage_colors.get(v, "#cccccc") for v in chart_data["Vintage"]]),
+                    marker={"colors": [vintage_colors.get(v, "#cccccc") for v in chart_data["Vintage"]]},
                     textposition="auto",
                     textinfo="label+percent",
                     hovertemplate="<b>%{label}</b><br>$%{value:,.2f}<br>%{percent}<extra></extra>",
@@ -711,9 +712,6 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
 
         subtitle = f"Data for full year {max_year}"
         return subtitle, fig
-
-    # Import pandas for categorical data
-    import pandas as pd
 
     # ========================================
     # Chart 4.1: KLI stacked bar by vintage
@@ -781,7 +779,7 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
 
         if len(total_by_date) > 1:
             x_numeric = np.arange(len(total_by_date))
-            y_values = total_by_date["Arrearage_Amount"].values
+            y_values = total_by_date["Arrearage_Amount"].to_numpy()
             slope, intercept, _, _, _ = stats.linregress(x_numeric, y_values)
             trendline = slope * x_numeric + intercept
 
@@ -875,7 +873,7 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
                 go.Pie(
                     labels=chart_data["Vintage"],
                     values=chart_data["Arrearage_Amount"],
-                    marker=dict(colors=[vintage_colors.get(v, "#cccccc") for v in chart_data["Vintage"]]),
+                    marker={"colors": [vintage_colors.get(v, "#cccccc") for v in chart_data["Vintage"]]},
                     textposition="auto",
                     textinfo="label+percent",
                     hovertemplate="<b>%{label}</b><br>$%{value:,.2f}<br>%{percent}<extra></extra>",
@@ -1014,8 +1012,12 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
         else:
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
+        # Sort by Date for chronological order before formatting
+        filtered_df = filtered_df.sort(["Utility", "Date", "Zip Code"])
         table_df = filtered_df.to_pandas()
-        table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
+        # Format Month as YYYY-MM for sortable display
+        table_df["Month"] = table_df["Date"].dt.strftime("%Y-%m")
+        # Drop Date column, only keep Month
         table_df = table_df[["Utility", "Zip Code", "Month", "Arrearage Customer Count"]]
         return table_df.to_dict("records")
 
@@ -1048,6 +1050,8 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
         else:
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
+        # Sort by Date for chronological order before formatting
+        filtered_df = filtered_df.sort(["Utility", "Date", "Zip Code", "Vintage"])
         table_df = filtered_df.to_pandas()
         table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
         table_df = table_df[["Utility", "Zip Code", "Month", "Vintage", "Arrearage_Amount"]]
@@ -1082,6 +1086,8 @@ def create_past_due_balances_callbacks(app: Dash, all_utilities: list[str]) -> N
         else:
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
+        # Sort by Date for chronological order before formatting
+        filtered_df = filtered_df.sort(["Utility", "Date", "Zip Code", "Vintage"])
         table_df = filtered_df.to_pandas()
         table_df["Month"] = table_df["Date"].dt.strftime("%b %Y")
         table_df = table_df[["Utility", "Zip Code", "Month", "Vintage", "Arrearage_Amount"]]

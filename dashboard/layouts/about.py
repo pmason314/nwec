@@ -57,7 +57,8 @@ def create_about_tab() -> dcc.Tab:
                     ),
                     html.P(
                         [
-                            "Data in this dashboard comes from monthly and quarterly reports that utilities file with the Washington Utilities & Transportation Commission in ",
+                            "Data in this dashboard comes from monthly and quarterly reports that utilities file with"
+                            " the Washington Utilities & Transportation Commission in ",
                             html.A(
                                 "Docket U-200281",
                                 href="https://www.utc.wa.gov/casedocket/2020/200281/docsets",
@@ -70,7 +71,8 @@ def create_about_tab() -> dcc.Tab:
                     ),
                     html.P(
                         [
-                            "For additional information on utility disconnections data and policies in Washington State and nationwide, see the ",
+                            "For additional information on utility disconnections data and policies in Washington State"
+                            " and nationwide, see the ",
                             html.A(
                                 "Indiana University Utility Disconnections Dashboard",
                                 href="https://energyjustice.indiana.edu/disconnection-dashboard/index.html",
@@ -82,7 +84,8 @@ def create_about_tab() -> dcc.Tab:
                         style={"color": "#34495e", "fontSize": "16px", "lineHeight": "1.6"},
                     ),
                     html.P(
-                        "This analysis was prepared by the NW Energy Coalition and this dashboard was prepared by Peter Mason.",
+                        "This analysis was prepared by the NW Energy Coalition and this dashboard was prepared by Peter"
+                        " Mason.",
                         style={"color": "#34495e", "fontSize": "16px", "lineHeight": "1.6"},
                     ),
                 ],

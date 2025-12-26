@@ -85,7 +85,6 @@ def build_kpi_cards(
     total_arrearage_amount: float,
     total_disconnections: int,
     total_bill_assistance: float,
-    date_range_text: str,
 ) -> list[html.Div]:
     """Build all KPI cards for the dashboard with placeholder comparisons.
 

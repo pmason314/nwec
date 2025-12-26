@@ -1,10 +1,10 @@
 """Callbacks for Bill Assistance tab."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import polars as pl
-from dash import Input, Output, State, dcc
+from dash import Dash, Input, Output, State, dcc
 from dash.exceptions import PreventUpdate
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
@@ -13,7 +13,7 @@ from scipy import stats
 from dashboard.dashboard_config import load_dataset
 
 
-def create_bill_assistance_callbacks(app, all_utilities: list):
+def create_bill_assistance_callbacks(app: Dash) -> None:
     """Register all Bill Assistance callbacks."""
     # Load data
     df_bill_assist = load_dataset("bill_assist")
@@ -46,14 +46,20 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             Input("selected-utilities-store", "data"),
         ],
     )
-    def update_ba_enrollment_stacked_line(start_month, start_year, end_month, end_year, selected_utilities):
+    def update_ba_enrollment_stacked_line(
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str],
+    ) -> tuple[go.Figure, str]:
         """Create stacked line graph for bill assistance enrollment by utility."""
         if not selected_utilities:
             selected_utilities = []
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         # Filter by date range and utilities
         df_filtered = df_bill_assist.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
@@ -84,7 +90,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                     y=utility_data["Bill Assist Customer Count"].to_list(),
                     mode="lines",
                     name=utility,
-                    line=dict(width=3, color=utility_colors.get(utility, "#95a5a6")),
+                    line={"width": 3, "color": utility_colors.get(utility, "#95a5a6")},
                     stackgroup="one",
                 )
             )
@@ -93,11 +99,11 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             xaxis_title="Month",
             yaxis_title="Number of Customers",
             hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(l=60, r=30, t=30, b=60),
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+            margin={"l": 60, "r": 30, "t": 30, "b": 60},
             plot_bgcolor="white",
             paper_bgcolor="white",
-            font=dict(family="Arial, sans-serif", size=12),
+            font={"family": "Arial, sans-serif", "size": 12},
             height=500,
         )
 
@@ -124,14 +130,20 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             Input("selected-utilities-store", "data"),
         ],
     )
-    def update_ba_enrollment_individual_trendlines(start_month, start_year, end_month, end_year, selected_utilities):
+    def update_ba_enrollment_individual_trendlines(
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> tuple[go.Figure, str]:
         """Create individual trendlines for each utility."""
         if not selected_utilities:
             selected_utilities = []
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         # Filter by date range and utilities
         df_filtered = df_bill_assist.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
@@ -177,7 +189,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                 y_values = utility_data["Bill Assist Customer Count"].to_list()
 
                 # Calculate trendline
-                slope, intercept, r_value, _, _ = stats.linregress(x_numeric, y_values)
+                slope, intercept, _, _, _ = stats.linregress(x_numeric, y_values)
                 trendline_y = [slope * x + intercept for x in x_numeric]
 
                 # Add actual data
@@ -187,8 +199,8 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                         y=y_values,
                         mode="lines+markers",
                         name=utility,
-                        line=dict(color=utility_colors.get(utility, "#95a5a6"), width=2),
-                        marker=dict(size=6),
+                        line={"color": utility_colors.get(utility, "#95a5a6"), "width": 2},
+                        marker={"size": 6},
                         showlegend=False,
                     ),
                     row=row,
@@ -202,7 +214,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                         y=trendline_y,
                         mode="lines",
                         name="Trend",
-                        line=dict(color="rgba(255, 99, 71, 0.5)", width=2, dash="dash"),
+                        line={"color": "rgba(255, 99, 71, 0.5)", "width": 2, "dash": "dash"},
                         showlegend=False,
                     ),
                     row=row,
@@ -214,7 +226,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             showlegend=False,
             plot_bgcolor="white",
             paper_bgcolor="white",
-            margin=dict(l=60, r=30, t=50, b=60),
+            margin={"l": 60, "r": 30, "t": 50, "b": 60},
         )
 
         fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e1e8ed")
@@ -242,14 +254,20 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             Input("selected-utilities-store", "data"),
         ],
     )
-    def update_payment_arr_stacked_line(start_month, start_year, end_month, end_year, selected_utilities):
+    def update_payment_arr_stacked_line(
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> tuple[go.Figure, str]:
         """Create stacked line graph for payment arrangements by utility."""
         if not selected_utilities:
             selected_utilities = []
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         # Filter by date range and utilities
         df_filtered = df_payment_arr.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
@@ -280,7 +298,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                     y=utility_data["Payment Agreement Customer Count"].to_list(),
                     mode="lines",
                     name=utility,
-                    line=dict(width=3, color=utility_colors.get(utility, "#95a5a6")),
+                    line={"width": 3, "color": utility_colors.get(utility, "#95a5a6")},
                     stackgroup="one",
                 )
             )
@@ -289,11 +307,11 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             xaxis_title="Month",
             yaxis_title="Number of Customers",
             hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(l=60, r=30, t=30, b=60),
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+            margin={"l": 60, "r": 30, "t": 30, "b": 60},
             plot_bgcolor="white",
             paper_bgcolor="white",
-            font=dict(family="Arial, sans-serif", size=12),
+            font={"family": "Arial, sans-serif", "size": 12},
             height=500,
         )
 
@@ -320,14 +338,20 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             Input("selected-utilities-store", "data"),
         ],
     )
-    def update_payment_arr_individual_trendlines(start_month, start_year, end_month, end_year, selected_utilities):
+    def update_payment_arr_individual_trendlines(
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> tuple[go.Figure, str]:
         """Create individual trendlines for payment arrangements."""
         if not selected_utilities:
             selected_utilities = []
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         # Filter by date range and utilities
         df_filtered = df_payment_arr.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
@@ -373,7 +397,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                 y_values = utility_data["Payment Agreement Customer Count"].to_list()
 
                 # Calculate trendline
-                slope, intercept, r_value, _, _ = stats.linregress(x_numeric, y_values)
+                slope, intercept, _, _, _ = stats.linregress(x_numeric, y_values)
                 trendline_y = [slope * x + intercept for x in x_numeric]
 
                 # Add actual data
@@ -383,8 +407,8 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                         y=y_values,
                         mode="lines+markers",
                         name=utility,
-                        line=dict(color=utility_colors.get(utility, "#95a5a6"), width=2),
-                        marker=dict(size=6),
+                        line={"color": utility_colors.get(utility, "#95a5a6"), "width": 2},
+                        marker={"size": 6},
                         showlegend=False,
                     ),
                     row=row,
@@ -398,7 +422,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
                         y=trendline_y,
                         mode="lines",
                         name="Trend",
-                        line=dict(color="rgba(255, 99, 71, 0.5)", width=2, dash="dash"),
+                        line={"color": "rgba(255, 99, 71, 0.5)", "width": 2, "dash": "dash"},
                         showlegend=False,
                     ),
                     row=row,
@@ -410,7 +434,7 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             showlegend=False,
             plot_bgcolor="white",
             paper_bgcolor="white",
-            margin=dict(l=60, r=30, t=50, b=60),
+            margin={"l": 60, "r": 30, "t": 50, "b": 60},
         )
 
         fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e1e8ed")
@@ -435,14 +459,20 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             Input("selected-utilities-store", "data"),
         ],
     )
-    def update_ba_enrollment_table(start_month, start_year, end_month, end_year, selected_utilities):
+    def update_ba_enrollment_table(
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> list[dict]:
         """Update bill assistance enrollment data table."""
         if not selected_utilities:
             selected_utilities = []
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         df_filtered = df_bill_assist.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
             (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date)
@@ -453,8 +483,14 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
         else:
             df_filtered = df_filtered.filter(pl.lit(value=False))
 
-        # Sort for better readability
-        df_sorted = df_filtered.sort(["Utility", "Month", "Zip Code"])
+        # Format Month column as "Jan 2025" and convert Date to ISO for sorting
+        df_formatted = df_filtered.with_columns(
+            [
+                pl.col("Date").dt.strftime("%Y-%m-%d").alias("Date"),
+                pl.col("Date").dt.strftime("%b %Y").alias("Month"),
+            ]
+        ).drop("Year")
+        df_sorted = df_formatted.sort(["Utility", "Date", "Zip Code"])
 
         return df_sorted.to_dicts()
 
@@ -469,14 +505,20 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
             Input("selected-utilities-store", "data"),
         ],
     )
-    def update_payment_arr_table(start_month, start_year, end_month, end_year, selected_utilities):
+    def update_payment_arr_table(
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> list[dict]:
         """Update payment arrangements data table."""
         if not selected_utilities:
             selected_utilities = []
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         df_filtered = df_payment_arr.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
             (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date)
@@ -487,8 +529,13 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
         else:
             df_filtered = df_filtered.filter(pl.lit(value=False))
 
-        # Sort for better readability
-        df_sorted = df_filtered.sort(["Utility", "Month", "Zip Code"])
+        # Format Month as YYYY-MM for sortable display
+        df_formatted = df_filtered.with_columns(
+            [
+                pl.col("Date").dt.strftime("%Y-%m").alias("Month"),
+            ]
+        ).drop("Year")
+        df_sorted = df_formatted.sort(["Utility", "Month", "Zip Code"])
 
         return df_sorted.to_dicts()
 
@@ -509,14 +556,21 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
         ],
         prevent_initial_call=True,
     )
-    def download_ba_enrollment_csv(n_clicks, start_month, start_year, end_month, end_year, selected_utilities):
+    def download_ba_enrollment_csv(
+        n_clicks: int | None,
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> dict:
         """Download bill assistance enrollment data as CSV."""
         if not n_clicks or not selected_utilities:
             raise PreventUpdate
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         df_filtered = df_bill_assist.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
             (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date)
@@ -525,7 +579,9 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
         if selected_utilities:
             df_filtered = df_filtered.filter(pl.col("Utility").is_in(selected_utilities))
 
-        df_sorted = df_filtered.sort(["Utility", "Month", "Zip Code"])
+        # Format Month column as "Jan 2025" for CSV
+        df_formatted = df_filtered.with_columns(pl.col("Date").dt.strftime("%b %Y").alias("Month")).drop("Year")
+        df_sorted = df_formatted.sort(["Utility", "Date", "Zip Code"])
 
         return dcc.send_data_frame(
             df_sorted.to_pandas().to_csv,
@@ -546,14 +602,21 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
         ],
         prevent_initial_call=True,
     )
-    def download_payment_arr_csv(n_clicks, start_month, start_year, end_month, end_year, selected_utilities):
+    def download_payment_arr_csv(
+        n_clicks: int | None,
+        start_month: int,
+        start_year: int,
+        end_month: int,
+        end_year: int,
+        selected_utilities: list[str] | None,
+    ) -> dict:
         """Download payment arrangements data as CSV."""
         if not n_clicks or not selected_utilities:
             raise PreventUpdate
 
         # Create date range
-        start_date = datetime(start_year, start_month, 1)
-        end_date = datetime(end_year, end_month, 1)
+        start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
+        end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
 
         df_filtered = df_payment_arr.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(
             (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date)
@@ -562,7 +625,9 @@ def create_bill_assistance_callbacks(app, all_utilities: list):
         if selected_utilities:
             df_filtered = df_filtered.filter(pl.col("Utility").is_in(selected_utilities))
 
-        df_sorted = df_filtered.sort(["Utility", "Month", "Zip Code"])
+        # Format Month column as "Jan 2025" for CSV
+        df_formatted = df_filtered.with_columns(pl.col("Date").dt.strftime("%b %Y").alias("Month")).drop("Year")
+        df_sorted = df_formatted.sort(["Utility", "Date", "Zip Code"])
 
         return dcc.send_data_frame(
             df_sorted.to_pandas().to_csv,
