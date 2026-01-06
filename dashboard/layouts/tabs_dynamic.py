@@ -2,6 +2,12 @@
 
 from dash import dash_table, dcc, html
 
+from dashboard.layouts.about import create_about_tab
+from dashboard.layouts.tab_bill_assistance import create_bill_assistance_tab
+from dashboard.layouts.tab_collections import create_collections_tab
+from dashboard.layouts.tab_disconnections import create_disconnections_tab
+from dashboard.layouts.tab_past_due_balances import create_past_due_balances_tab
+
 
 def create_dataset_subtabs(
     dataset_id: str, dataset_name: str, value_column: str, is_amount: bool = False, has_vintage: bool = False
@@ -26,9 +32,11 @@ def create_dataset_subtabs(
     ]
     if has_vintage:
         table_columns.append({"name": "Vintage", "id": "Vintage"})
+    # Display-friendly column name: replace 'Arrearage' with 'Past-Due Balance' in UI
+    display_value_name = value_column.replace("Arrearage", "Past-Due Balance")
     table_columns.append(
         {
-            "name": value_column,
+            "name": display_value_name,
             "id": value_column,
             "type": "numeric",
             "format": value_format,
@@ -220,9 +228,32 @@ def create_dynamic_tabs(dataset_configs: list) -> dcc.Tabs:
     Args:
         dataset_configs: List of DatasetConfig objects
     """
-    tab_children = []
+    # Start with About tab, then add comprehensive tabs
+    tab_children = [
+        create_about_tab(),
+        create_past_due_balances_tab(),
+        create_disconnections_tab(),
+        create_bill_assistance_tab(),
+        create_collections_tab(),
+    ]
+
+    # Add other dataset tabs (excluding datasets that have comprehensive tabs)
+    excluded_datasets = {
+        "arrearage_counts",
+        "arrearage_amounts",
+        "kli_arrearage_amounts",
+        "disconnections",
+        "disconnection_notices",
+        "bill_assist",
+        "payment_agreements",
+        "collection_agency_referrals",
+    }
 
     for config in dataset_configs:
+        # Skip arrearage datasets as they're now in the comprehensive Past-Due Balances tab
+        if config.file_name in excluded_datasets:
+            continue
+
         dataset_id = config.file_name.replace("_", "-")
 
         # Check if dataset has Vintage column
@@ -252,7 +283,7 @@ def create_dynamic_tabs(dataset_configs: list) -> dcc.Tabs:
 
     return dcc.Tabs(
         id="main-tabs",
-        value=f"{dataset_configs[0].file_name.replace('_', '-')}-tab" if dataset_configs else "tab1",
+        value="about-tab",
         children=tab_children,
         style={"marginBottom": "30px"},
     )

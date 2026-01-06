@@ -12,7 +12,7 @@ def create_header() -> html.Div:
             html.Div(
                 [
                     html.H1(
-                        "Utility Reporting Dashboard",
+                        "Energy Affordability Dashboard",
                         style={
                             "color": "white",
                             "margin": 0,
@@ -21,7 +21,8 @@ def create_header() -> html.Div:
                         },
                     ),
                     html.P(
-                        "Arrearages, disconnections, and other payment trends for PNW utilities",
+                        "Residential affordability data from Washington's five "
+                        "investor-owned electric and gas utilities",
                         style={
                             "color": "rgba(255, 255, 255, 0.9)",
                             "margin": "8px 0 0 0",

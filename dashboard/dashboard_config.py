@@ -7,6 +7,15 @@ import polars as pl
 from nwec.constants import PROCESSED_UTILITY_DATA
 from nwec.utility_reporting.processing.standard_pipeline import load_pipelines
 
+# Utility display names mapping (acronym -> full name)
+UTILITY_DISPLAY_NAMES = {
+    "Avista": "Avista",
+    "PSE": "Puget Sound Energy (PSE)",
+    "PAC": "Pacific Power (PAC)",
+    "CNG": "Cascade Natural Gas (CNG)",
+    "NWN": "Northwest Natural Gas (NWN)",
+}
+
 
 @dataclass
 class DatasetConfig:
@@ -47,14 +56,7 @@ def get_dataset_configs() -> list[DatasetConfig]:
             name="Bill Assistance", file_name="bill_assist", value_column="Bill Assist Customer Count", emoji="🤝"
         ),
         "arrearage_counts": DatasetConfig(
-            name="Arrearage Counts", file_name="arrearage_counts", value_column="Arrearage Customer Count", emoji="📈"
-        ),
-        "uncollectible_arrears": DatasetConfig(
-            name="Uncollectible Arrears",
-            file_name="uncollectible_arrears",
-            value_column="Uncollectible Arrearage Amount",
-            is_amount=True,
-            emoji="💸",
+            name="Past-Due Balances", file_name="arrearage_counts", value_column="Arrearage Customer Count", emoji="📈"
         ),
         "collection_agency_referrals": DatasetConfig(
             name="Collection Referrals",
@@ -75,7 +77,7 @@ def get_dataset_configs() -> list[DatasetConfig]:
     if (PROCESSED_UTILITY_DATA / "arrearage_amounts.arrow").exists():
         configs.append(
             DatasetConfig(
-                name="Arrearage Amounts",
+                name="Past-Due Balance Amounts",
                 file_name="arrearage_amounts",
                 value_column="Arrearage_Amount",
                 is_amount=True,
@@ -86,7 +88,7 @@ def get_dataset_configs() -> list[DatasetConfig]:
     if (PROCESSED_UTILITY_DATA / "kli_arrearage_amounts.arrow").exists():
         configs.append(
             DatasetConfig(
-                name="KLI Arrearage Amounts",
+                name="KLI Past-Due Balance Amounts",
                 file_name="kli_arrearage_amounts",
                 value_column="Arrearage_Amount",
                 is_amount=True,

@@ -4,13 +4,13 @@ from dash import dash_table, dcc, html
 
 
 def create_counts_subtabs() -> dcc.Tabs:
-    """Create sub-tabs for Arrearage Counts (Chart and Data Table)."""
+    """Create sub-tabs for Past-Due Balances (Counts)."""
     return dcc.Tabs(
         id="counts-subtabs",
         value="counts-chart-tab",
         children=[
             dcc.Tab(
-                label="📊 Total Arrearage Counts by Utility",
+                label="📊 Total Past-Due Balances by Utility",
                 value="counts-chart-tab",
                 style={
                     "padding": "8px 20px",
@@ -30,7 +30,7 @@ def create_counts_subtabs() -> dcc.Tabs:
                             html.Div(
                                 [
                                     html.H3(
-                                        "Total Arrearage Counts by Utility",
+                                        "Total Past-Due Balances by Utility",
                                         style={
                                             "marginTop": 0,
                                             "marginBottom": "5px",
@@ -91,7 +91,7 @@ def create_counts_subtabs() -> dcc.Tabs:
                             html.Div(
                                 [
                                     html.H3(
-                                        "Arrearage Count Data",
+                                        "Past-Due Balance Count Data",
                                         style={
                                             "marginTop": 0,
                                             "marginBottom": "5px",

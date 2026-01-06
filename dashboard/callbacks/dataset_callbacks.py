@@ -66,7 +66,7 @@ def create_dataset_callbacks(app: Dash, config: DatasetConfig, all_utilities: li
         chart_data = filtered_df.group_by(["Date", "Utility"]).agg(pl.col(config.value_column).sum()).sort("Date")
 
         # Create chart subtitle
-        chart_subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
+        chart_subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
 
         # Convert to pandas for Plotly
         chart_df = chart_data.to_pandas()
@@ -98,7 +98,9 @@ def create_dataset_callbacks(app: Dash, config: DatasetConfig, all_utilities: li
                     )
                 )
 
-        y_axis_title = f"{config.value_column} ($)" if config.is_amount else config.value_column
+        # Display-friendly axis title: replace 'Arrearage' with 'Past-Due Balance' for UI
+        display_value_label = config.value_column.replace("Arrearage", "Past-Due Balance")
+        y_axis_title = f"{display_value_label} ($)" if config.is_amount else display_value_label
         tick_format = "$,.0f" if config.is_amount else ",.0f"
 
         fig.update_layout(
