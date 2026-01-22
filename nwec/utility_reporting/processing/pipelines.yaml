@@ -7,6 +7,18 @@ pipelines:
     core_value_column_name: "Disconnection Notice Count"
     processed_file_name: "disconnection_notices"
   
+  - sheet_name: "Late Fees"
+    core_value_column_name: "Late Fee Amount"
+    processed_file_name: "late_fees"
+
+  - sheet_name: "Reconnect Fees"
+    core_value_column_name: "Reconnection Fee Amount"
+    processed_file_name: "reconnection_fees"
+
+  - sheet_name: "Disconnect Fees"
+    core_value_column_name: "Disconnection Fee Amount"
+    processed_file_name: "disconnection_fees"
+
   - sheet_name: "No. of Customers w TPAs"
     core_value_column_name: "Payment Agreement Customer Count"
     processed_file_name: "payment_agreements"
@@ -14,7 +26,7 @@ pipelines:
   - sheet_name: "No. of Customers in Bill Assist"
     core_value_column_name: "Bill Assist Customer Count"
     processed_file_name: "bill_assist"
-  
+
   - sheet_name: "No. Customers w Arrears"
     core_value_column_name: "Arrearage Customer Count"
     processed_file_name: "arrearage_counts"

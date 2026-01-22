@@ -271,7 +271,14 @@ def update_kpi_cards(
     disconnections = load_dataset("disconnections").with_columns(
         pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
     )
-    bill_assist = load_dataset("bill_assist").with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date"))
+
+    # Load assistance datasets (LIHEAP + Utility programs)
+    assistance_liheap = load_dataset("assistance_liheap").with_columns(
+        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+    )
+    assistance_utility = load_dataset("assistance_utility").with_columns(
+        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+    )
 
     # Filter by date range and utilities
     arrearage_counts_filtered = arrearage_counts.filter(
@@ -283,7 +290,10 @@ def update_kpi_cards(
     disconnections_filtered = disconnections.filter(
         (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
     )
-    bill_assist_filtered = bill_assist.filter(
+    assistance_liheap_filtered = assistance_liheap.filter(
+        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
+    )
+    assistance_utility_filtered = assistance_utility.filter(
         (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
     )
 
@@ -291,7 +301,11 @@ def update_kpi_cards(
     total_customers = arrearage_counts_filtered.select(pl.col("Arrearage Customer Count").sum()).item()
     total_amount = arrearage_amounts_filtered.select(pl.col("Arrearage_Amount").sum()).item()
     total_disconnects = disconnections_filtered.select(pl.col("Number of Disconnects").sum()).item()
-    total_assist = bill_assist_filtered.select(pl.col("Bill Assist Customer Count").sum()).item()
+
+    # Sum LIHEAP and utility assistance funds
+    total_liheap = assistance_liheap_filtered.select(pl.col("Assistance Amount").sum()).item()
+    total_utility_assist = assistance_utility_filtered.select(pl.col("Assistance Amount").sum()).item()
+    total_assist = (total_liheap or 0.0) + (total_utility_assist or 0.0)
 
     # Handle None values
     total_customers = total_customers if total_customers is not None else 0

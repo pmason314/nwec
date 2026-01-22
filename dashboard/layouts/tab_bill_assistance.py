@@ -106,6 +106,50 @@ def create_bill_assistance_tab() -> dcc.Tab:
                         ],
                         style=card_style,
                     ),
+                    # Chart 3: Stacked bar chart - LIHEAP dollars by utility
+                    html.Div(
+                        [
+                            html.H3(
+                                "Distributed Bill Assistance Dollars from LIHEAP",
+                                style=title_style,
+                            ),
+                            html.P(
+                                id="ba-liheap-dollars-subtitle",
+                                style=subtitle_style,
+                            ),
+                            dcc.Loading(
+                                type="default",
+                                color="#156570",
+                                children=dcc.Graph(
+                                    id="ba-liheap-dollars-stacked-bar",
+                                    config={"displayModeBar": True},
+                                ),
+                            ),
+                        ],
+                        style=card_style,
+                    ),
+                    # Chart 4: Stacked bar chart - utility assistance dollars by utility
+                    html.Div(
+                        [
+                            html.H3(
+                                "Distributed Bill Assistance Dollars from Utility Programs",
+                                style=title_style,
+                            ),
+                            html.P(
+                                id="ba-utility-dollars-subtitle",
+                                style=subtitle_style,
+                            ),
+                            dcc.Loading(
+                                type="default",
+                                color="#156570",
+                                children=dcc.Graph(
+                                    id="ba-utility-dollars-stacked-bar",
+                                    config={"displayModeBar": True},
+                                ),
+                            ),
+                        ],
+                        style=card_style,
+                    ),
                     # Section 2: Payment Arrangements
                     html.H2(
                         "Payment Arrangements",
@@ -119,7 +163,7 @@ def create_bill_assistance_tab() -> dcc.Tab:
                             "borderBottom": "2px solid #156570",
                         },
                     ),
-                    # Chart 3: Stacked line graph - payment arrangements by utility
+                    # Chart 5: Stacked line graph - payment arrangements by utility
                     html.Div(
                         [
                             html.H3(
@@ -141,7 +185,7 @@ def create_bill_assistance_tab() -> dcc.Tab:
                         ],
                         style=card_style,
                     ),
-                    # Chart 4: Individual utility trendlines for payment arrangements
+                    # Chart 6: Individual utility trendlines for payment arrangements
                     html.Div(
                         [
                             html.H3(

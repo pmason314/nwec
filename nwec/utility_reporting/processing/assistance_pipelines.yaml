@@ -1,0 +1,10 @@
+pipelines:
+  - sheet_name: "$ From COVID"
+    core_value_column_name: "Assistance Amount"
+    processed_file_name: "assistance_covid"
+  - sheet_name: "$ From LIHEAP"
+    core_value_column_name: "Assistance Amount"
+    processed_file_name: "assistance_liheap"
+  - sheet_name: "$ From Utility Assist."
+    core_value_column_name: "Assistance Amount"
+    processed_file_name: "assistance_utility"

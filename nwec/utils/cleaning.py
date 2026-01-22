@@ -116,12 +116,47 @@ def _validate_value_column(df: pl.DataFrame, value_column_name: str) -> dict[str
     return errors
 
 
-def validate_data(df: pl.DataFrame, value_column_name: str) -> None:
+def _validate_duplicates(df: pl.DataFrame) -> dict[str, list[str]]:
+    """Validate that there are no duplicate rows based on key columns.
+
+    Checks for duplicates based on Utility, Year, Month, Customer Class (if present),
+    Zip Code (if present), and Vintage (if present). This catches cases where multiple 
+    rows exist for the same key combination, which could happen if data is split across 
+    quarters or reporting periods.
+    """
+    errors = {}
+
+    # Build list of key columns that exist in the dataframe
+    key_columns: list[str] = [
+        col for col in ["Utility", "Year", "Month", "Customer Class", "Zip Code", "Vintage"] if col in df.columns
+    ]
+
+    if not key_columns:
+        return errors
+
+    # Check for duplicates based on key columns
+    duplicate_check = df.select(key_columns).group_by(key_columns).agg(pl.len().alias("count"))
+    duplicates = duplicate_check.filter(pl.col("count") > 1)
+
+    if len(duplicates) > 0:
+        count = len(duplicates)
+        sample_duplicates = duplicates.head(5).to_dicts()
+        errors["Duplicates"] = [
+            f"Found {count} duplicate key combinations. "
+            f"Sample duplicates: {sample_duplicates}. "
+            f"This may indicate overlapping data from different reporting periods."
+        ]
+
+    return errors
+
+
+def validate_data(df: pl.DataFrame, value_column_name: str, sheet_name: str | None = None) -> None:
     """Validate utility data and return any issues found.
 
     Args:
         df: Input DataFrame to validate
         value_column_name: Name of the column containing numeric values to validate
+        sheet_name: Optional name of the sheet being validated (for error reporting)
 
     Returns:
         Dictionary mapping validation check names to lists of error messages
@@ -143,10 +178,16 @@ def validate_data(df: pl.DataFrame, value_column_name: str) -> None:
     if value_column_name in df.columns:
         errors.update(_validate_value_column(df, value_column_name))
 
+    # Check for duplicates based on key columns
+    errors.update(_validate_duplicates(df))
+
     if errors:
-        error_message = "Data validation failed:\n"
+        sheet_info = f" (Sheet: {sheet_name})" if sheet_name else ""
+        error_message = f"Data validation failed{sheet_info}:\n"
         for field, messages in errors.items():
             for message in messages:
                 error_message += f"  - {field}: {message}\n"
         raise ValueError(error_message)
-    print("Data validation passed with no errors.")
+
+    sheet_info = f" for sheet '{sheet_name}'" if sheet_name else ""
+    print(f"Data validation passed with no errors{sheet_info}.")
