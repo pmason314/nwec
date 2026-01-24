@@ -69,7 +69,7 @@ def run_full_pipeline(pipeline: Pipeline) -> None:
     # Filter for residential customers and clean up the "Arrearage Count" column
     df = df.filter(pl.col("Customer Class").str.contains(r"(?i)res")).drop("Customer Class")
     df = clean_utility_data(df, value_column_name=pipeline.core_value_column_name)
-    validate_data(df, value_column_name=pipeline.core_value_column_name)
+    validate_data(df, value_column_name=pipeline.core_value_column_name, sheet_name=pipeline.sheet_name)
 
     # Save the processed data
     PROCESSED_UTILITY_DATA.mkdir(parents=True, exist_ok=True)
