@@ -9,6 +9,8 @@ from dash import Dash, Input, Output
 from plotly.subplots import make_subplots
 from scipy import stats
 
+from dashboard.chart_builders import create_stacked_line_chart
+
 
 def register_counts_callbacks(
     app: Dash,
@@ -63,57 +65,19 @@ def register_counts_callbacks(
 
         # Aggregate by date and utility
         chart_data = (
-            filtered_df.group_by(["Date", "Utility"])
-            .agg(pl.col("Arrearage Customer Count").sum())
-            .sort("Date")
-            .to_pandas()
+            filtered_df.group_by(["Date", "Utility"]).agg(pl.col("Arrearage Customer Count").sum()).sort("Date")
         )
 
-        # Create figure
-        fig = go.Figure()
-
-        for utility in selected_utilities if selected_utilities else all_utilities:
-            utility_data = chart_data[chart_data["Utility"] == utility].sort_values("Date")
-            if not utility_data.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=utility_data["Date"],
-                        y=utility_data["Arrearage Customer Count"],
-                        name=utility,
-                        mode="lines",
-                        stackgroup="one",
-                        fillcolor=colors.get(utility, "#cccccc"),
-                        line={"width": 0.5, "color": colors.get(utility, "#cccccc")},
-                        hovertemplate=f"<b>{utility}</b><br>%{{y:,.0f}}<extra></extra>",
-                    )
-                )
-
-        fig.update_layout(
-            xaxis_title="",
-            yaxis_title="Number of Customers",
-            legend={
-                "title": {"text": "Utility", "font": {"size": 14}},
-                "orientation": "v",
-                "yanchor": "top",
-                "y": 1,
-                "xanchor": "left",
-                "x": 1.02,
-            },
-            hovermode="x unified",
-            plot_bgcolor="white",
-            paper_bgcolor="white",
+        # Create figure using centralized chart builder
+        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        fig = create_stacked_line_chart(
+            data=chart_data,
+            utilities=utilities_to_show,
+            value_column="Arrearage Customer Count",
+            y_axis_title="Number of Customers",
+            utility_colors=colors,
+            is_amount=False,
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
-            xaxis={
-                "tickformat": "%b-%y",
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-            },
-            yaxis={
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-                "tickformat": ",.0f",
-            },
         )
 
         subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
@@ -144,6 +108,31 @@ def register_counts_callbacks(
 
         if not selected_utilities:
             selected_utilities = []
+
+        # Return empty figure if no utilities selected
+        if len(selected_utilities) == 0:
+            empty_fig = go.Figure()
+            empty_fig.update_layout(
+                xaxis={"visible": False},
+                yaxis={"visible": False},
+                annotations=[
+                    {
+                        "text": "No utilities selected. Please select at least one utility to view trends.",
+                        "xref": "paper",
+                        "yref": "paper",
+                        "showarrow": False,
+                        "font": {"size": 14, "color": "#7f8c8d"},
+                        "x": 0.5,
+                        "y": 0.5,
+                        "xanchor": "center",
+                        "yanchor": "middle",
+                    }
+                ],
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                height=400,
+            )
+            return "No utilities selected", empty_fig
 
         # Filter data
         filtered_df = counts_data.with_columns(pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")).filter(

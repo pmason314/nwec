@@ -112,6 +112,5 @@ paths = ["nwec", "tests"]
 deps-file = "pyproject.toml"
 sections = ["project.dependencies"]
 
-[tool.pyright]
-reportArgumentType      = false
-reportOptionalSubscript = false
+[tool.ty.terminal]
+output-format = "concise"

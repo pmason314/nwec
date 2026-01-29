@@ -67,10 +67,12 @@ def add_centered_image(presentation: Presentation, slide: Slide, image_path: Pat
     height = Inches(5)
 
     # Standard slide dimensions are 10" x 7.5"
-    slide_width = presentation.slide_width
-    slide_height = presentation.slide_height
-    left = (slide_width - width) / 2  # type: ignore[reportOptionalOperand]
-    top = (slide_height - height) / 2 - Inches(0.5)  # type: ignore[reportOptionalOperand]
+    slide_width = presentation.slide_width if presentation.slide_width is not None else Inches(10)
+    slide_height = presentation.slide_height if presentation.slide_height is not None else Inches(7.5)
+    left_inches = (slide_width - width) / Inches(1) / 2
+    top_inches = ((slide_height - height) / Inches(1) / 2) - 0.5
+    left = Inches(left_inches)
+    top = Inches(top_inches)
 
     slide.shapes.add_picture(str(image_path), left, top, width=width, height=height)
 
@@ -98,10 +100,12 @@ def add_top_left_center_image(presentation: Presentation, slide: Slide, image_pa
     height = Inches(4.5)
 
     # Standard slide dimensions are 10" x 7.5"
-    slide_width = presentation.slide_width
-    slide_height = presentation.slide_height
-    left = (slide_width - width) / 6  # type: ignore[reportOptionalOperand]
-    top = (slide_height - height) / 4  # type: ignore[reportOptionalOperand]
+    slide_width = presentation.slide_width if presentation.slide_width is not None else Inches(10)
+    slide_height = presentation.slide_height if presentation.slide_height is not None else Inches(7.5)
+    left_inches = (slide_width - width) / Inches(1) / 6
+    top_inches = (slide_height - height) / Inches(1) / 4
+    left = Inches(left_inches)
+    top = Inches(top_inches)
 
     slide.shapes.add_picture(str(image_path), left, top, width=width, height=height)
 
@@ -129,9 +133,10 @@ def add_top_left_center_half_image(presentation: Presentation, slide: Slide, ima
     height = Inches(4)
 
     # Standard slide dimensions are 10" x 7.5"
-    slide_height = presentation.slide_height
-    left = Inches(0.5)  # type: ignore[reportOptionalOperand]
-    top = (slide_height - height) / 4  # type: ignore[reportOptionalOperand]
+    slide_height = presentation.slide_height if presentation.slide_height is not None else Inches(7.5)
+    left = Inches(0.5)
+    top_inches = (slide_height - height) / Inches(1) / 4
+    top = Inches(top_inches)
 
     slide.shapes.add_picture(str(image_path), left, top, width=width, height=height)
 
@@ -159,8 +164,10 @@ def add_top_right_center_half_image(presentation: Presentation, slide: Slide, im
     height = Inches(4)
 
     # Standard slide dimensions are 10" x 7.5"
-    slide_height = presentation.slide_height
-    left = Inches(6.5)  # type: ignore[reportOptionalOperand]
-    top = (slide_height - height) / 4  # type: ignore[reportOptionalOperand]
+    slide_height = presentation.slide_height if presentation.slide_height is not None else Inches(7.5)
+    left = Inches(6.5)
+    # Calculate top position and convert back to Length type
+    top_inches = (slide_height - height) / 4 / Inches(1)
+    top = Inches(top_inches)
 
     slide.shapes.add_picture(str(image_path), left, top, width=width, height=height)

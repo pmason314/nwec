@@ -84,8 +84,23 @@ def create_about_tab() -> dcc.Tab:
                         style={"color": "#34495e", "fontSize": "16px", "lineHeight": "1.6"},
                     ),
                     html.P(
-                        "This analysis was prepared by the NW Energy Coalition and this dashboard was prepared by Peter"
-                        " Mason.",
+                        [
+                            "This analysis was prepared by the ",
+                            html.A(
+                                "NW Energy Coalition",
+                                href="https://nwenergy.org/",
+                                target="_blank",
+                                style={"color": "#156570", "textDecoration": "none", "fontWeight": "600"},
+                            ),
+                            " and this dashboard was prepared by ",
+                            html.A(
+                                "Peter Mason",
+                                href="https://www.linkedin.com/in/petermason314",
+                                target="_blank",
+                                style={"color": "#156570", "textDecoration": "none", "fontWeight": "600"},
+                            ),
+                            ".",
+                        ],
                         style={"color": "#34495e", "fontSize": "16px", "lineHeight": "1.6"},
                     ),
                 ],

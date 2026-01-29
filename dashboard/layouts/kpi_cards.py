@@ -1,8 +1,23 @@
 """KPI cards section with card builder components."""
 
+from dataclasses import dataclass
+
 from dash import html
 
 from dashboard.chart_config import KpiCardData
+
+
+@dataclass
+class MetricComparison:
+    """Data structure for a metric's value and comparisons."""
+
+    value: float
+    qoq_change: str
+    qoq_arrow: str
+    qoq_color: str
+    yoy_change: str
+    yoy_arrow: str
+    yoy_color: str
 
 
 def create_kpi_cards_section() -> html.Div:
@@ -69,79 +84,79 @@ def create_kpi_card(data: KpiCardData) -> html.Div:
 
 
 def build_kpi_cards(
-    total_customers_with_arrearages: int,
-    total_arrearage_amount: float,
-    total_disconnections: int,
-    total_bill_assistance: float,
+    customers: MetricComparison,
+    amount: MetricComparison,
+    disconnections: MetricComparison,
+    assistance: MetricComparison,
+    date_range: str,
 ) -> list[html.Div]:
-    """Build all KPI cards for the dashboard with placeholder comparisons.
+    """Build all KPI cards for the dashboard with QoQ and YoY comparisons.
 
     Args:
-        total_customers_with_arrearages: Total number of customers with past-due balances
-        total_arrearage_amount: Total dollar value of past-due balances
-        total_disconnections: Total number of disconnections
-        total_bill_assistance: Total bill assistance funds distributed
-        date_range_text: Text describing the date range (e.g., "Jan 2020 - Dec 2024")
+        customers: Metric comparison data for customers with past-due balances
+        amount: Metric comparison data for total past-due balance amounts
+        disconnections: Metric comparison data for disconnections
+        assistance: Metric comparison data for bill assistance funds
+        date_range: Text describing the date range (e.g., "Q3 2024 (Jul-Sep)")
 
     Returns:
         List of KPI card Div components
     """
-    # Placeholder values for comparisons (will be calculated from real data later)
     return [
         create_kpi_card(
             KpiCardData(
                 icon="👥",
                 title="Customers with Past-Due Balances",
-                value=f"{total_customers_with_arrearages:,.0f}",
-                qoq_change="+2,150 (+5.0%)",
-                qoq_arrow="↑",
-                qoq_color="#e74c3c",  # Red for increase (bad)
-                yoy_change="+3,890 (+9.4%)",
-                yoy_arrow="↑",
-                yoy_color="#e74c3c",
-                date_range="Q3 2024 (Jul-Sep)",
+                value=f"{customers.value:,.0f}",
+                qoq_change=customers.qoq_change,
+                qoq_arrow=customers.qoq_arrow,
+                qoq_color=customers.qoq_color,
+                yoy_change=customers.yoy_change,
+                yoy_arrow=customers.yoy_arrow,
+                yoy_color=customers.yoy_color,
+                date_range=date_range,
             )
         ),
         create_kpi_card(
             KpiCardData(
                 icon="💰",
                 title="Total Past-Due Balances",
-                value=f"${total_arrearage_amount:,.0f}",
-                qoq_change="+$1.2M (+3.2%)",
-                qoq_arrow="↑",
-                qoq_color="#e74c3c",
-                yoy_change="+$4.5M (+12.1%)",
-                yoy_arrow="↑",
-                yoy_color="#e74c3c",
-                date_range="Q3 2024 (Jul-Sep)",
+                value=f"${amount.value:,.0f}",
+                qoq_change=amount.qoq_change,
+                qoq_arrow=amount.qoq_arrow,
+                qoq_color=amount.qoq_color,
+                yoy_change=amount.yoy_change,
+                yoy_arrow=amount.yoy_arrow,
+                yoy_color=amount.yoy_color,
+                date_range=date_range,
             )
         ),
         create_kpi_card(
             KpiCardData(
                 icon="🔌",
                 title="Total Disconnections",
-                value=f"{total_disconnections:,.0f}",
-                qoq_change="-450 (-8.5%)",
-                qoq_arrow="↓",
-                qoq_color="#27ae60",  # Green for decrease (good)
-                yoy_change="+1,200 (+15.3%)",
-                yoy_arrow="↑",
-                yoy_color="#e74c3c",
-                date_range="Q3 2024 (Jul-Sep)",
+                value=f"{disconnections.value:,.0f}",
+                qoq_change=disconnections.qoq_change,
+                qoq_arrow=disconnections.qoq_arrow,
+                qoq_color=disconnections.qoq_color,
+                yoy_change=disconnections.yoy_change,
+                yoy_arrow=disconnections.yoy_arrow,
+                yoy_color=disconnections.yoy_color,
+                date_range=date_range,
             )
         ),
         create_kpi_card(
             KpiCardData(
                 icon="🤝",
                 title="Total Bill Assistance Funds",
-                value=f"${total_bill_assistance:,.0f}",
-                qoq_change="+$850K (+6.2%)",
-                qoq_arrow="↑",
-                qoq_color="#27ae60",  # Green for increase (good)
-                yoy_change="+$2.1M (+18.7%)",
-                yoy_arrow="↑",
-                yoy_color="#27ae60",
-                date_range="Q3 2024 (Jul-Sep)",
+                value=f"${assistance.value:,.0f}",
+                qoq_change=assistance.qoq_change,
+                qoq_arrow=assistance.qoq_arrow,
+                qoq_color=assistance.qoq_color,
+                yoy_change=assistance.yoy_change,
+                yoy_arrow=assistance.yoy_arrow,
+                yoy_color=assistance.yoy_color,
+                date_range=date_range,
             )
         ),
     ]

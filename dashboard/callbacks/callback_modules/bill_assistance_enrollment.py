@@ -9,6 +9,8 @@ from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 from scipy import stats
 
+from dashboard.chart_builders import create_stacked_line_chart
+
 
 def register_enrollment_callbacks(
     app: Dash,
@@ -22,6 +24,7 @@ def register_enrollment_callbacks(
         df_bill_assist: Bill assistance dataset
         utility_colors: Utility color mapping
     """
+
     # Chart 1: Stacked line graph - bill assistance by utility
     @app.callback(
         [
@@ -68,37 +71,16 @@ def register_enrollment_callbacks(
             .sort(["Utility", "Date"])
         )
 
-        # Create figure
-        fig = go.Figure()
-
-        for utility in selected_utilities:
-            utility_data = df_agg.filter(pl.col("Utility") == utility)
-
-            fig.add_trace(
-                go.Scatter(
-                    x=utility_data["Date"].to_list(),
-                    y=utility_data["Bill Assist Customer Count"].to_list(),
-                    mode="lines",
-                    name=utility,
-                    line={"width": 3, "color": utility_colors.get(utility, "#95a5a6")},
-                    stackgroup="one",
-                )
-            )
-
-        fig.update_layout(
-            xaxis_title="Month",
-            yaxis_title="Number of Customers",
-            hovermode="x unified",
-            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-            margin={"l": 60, "r": 30, "t": 30, "b": 60},
-            plot_bgcolor="white",
-            paper_bgcolor="white",
-            font={"family": "Arial, sans-serif", "size": 12},
+        # Create figure using centralized chart builder
+        fig = create_stacked_line_chart(
+            data=df_agg,
+            utilities=selected_utilities,
+            value_column="Bill Assist Customer Count",
+            y_axis_title="Number of Customers",
+            utility_colors=utility_colors,
+            is_amount=False,
             height=500,
         )
-
-        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e1e8ed")
-        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#e1e8ed")
 
         # Create subtitle
         total = df_agg["Bill Assist Customer Count"].sum()
@@ -130,6 +112,31 @@ def register_enrollment_callbacks(
         """Create individual trendlines for each utility."""
         if not selected_utilities:
             selected_utilities = []
+
+        # Return empty figure if no utilities selected
+        if len(selected_utilities) == 0:
+            empty_fig = go.Figure()
+            empty_fig.update_layout(
+                xaxis={"visible": False},
+                yaxis={"visible": False},
+                annotations=[
+                    {
+                        "text": "No utilities selected. Please select at least one utility to view trends.",
+                        "xref": "paper",
+                        "yref": "paper",
+                        "showarrow": False,
+                        "font": {"size": 14, "color": "#7f8c8d"},
+                        "x": 0.5,
+                        "y": 0.5,
+                        "xanchor": "center",
+                        "yanchor": "middle",
+                    }
+                ],
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                height=400,
+            )
+            return empty_fig, "No utilities selected"
 
         # Create date range
         start_date = datetime(start_year, start_month, 1, tzinfo=UTC)

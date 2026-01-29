@@ -82,8 +82,8 @@ def register_funding_callbacks(
                     name=utility,
                     marker_color=utility_colors.get(utility, "#156570"),
                     hovertemplate=f"<b>{utility}</b><br>"
-                    + "Date: %{x|%b %Y}<br>"
-                    + "Amount: $%{y:,.0f}<extra></extra>",
+                     "Date: %{x|%b %Y}<br>"
+                     "Amount: $%{y:,.0f}<extra></extra>",
                 )
             )
 
@@ -92,7 +92,7 @@ def register_funding_callbacks(
             xaxis_title="Date",
             yaxis_title="LIHEAP Assistance ($USD)",
             hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
             template="plotly_white",
             height=500,
         )
@@ -163,8 +163,8 @@ def register_funding_callbacks(
                     name=utility,
                     marker_color=utility_colors.get(utility, "#156570"),
                     hovertemplate=f"<b>{utility}</b><br>"
-                    + "Date: %{x|%b %Y}<br>"
-                    + "Amount: $%{y:,.0f}<extra></extra>",
+                     "Date: %{x|%b %Y}<br>"
+                     "Amount: $%{y:,.0f}<extra></extra>",
                 )
             )
 
@@ -173,7 +173,7 @@ def register_funding_callbacks(
             xaxis_title="Date",
             yaxis_title="Utility Assistance ($USD)",
             hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
             template="plotly_white",
             height=500,
         )

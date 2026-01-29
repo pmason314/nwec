@@ -18,7 +18,7 @@ from dashboard.dashboard_config import (
     get_dataset_configs,
     load_dataset,
 )
-from dashboard.layouts.kpi_cards import build_kpi_cards
+from dashboard.layouts.kpi_cards import MetricComparison, build_kpi_cards
 from dashboard.layouts.main_layout import create_main_layout
 from dashboard.utils import UTILITY_COLORS
 
@@ -233,91 +233,222 @@ create_bill_assistance_callbacks(app)
 create_collections_callbacks(app)
 
 
-# KPI cards callback to show statewide metrics
+# Helper functions for KPI calculations
+def _load_kpi_datasets() -> dict[str, pl.DataFrame]:
+    """Load and prepare all datasets needed for KPI calculations."""
+    return {
+        "arrearage_counts": load_dataset("arrearage_counts").with_columns(
+            pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+        ),
+        "arrearage_amounts": load_dataset("arrearage_amounts").with_columns(
+            pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+        ),
+        "disconnections": load_dataset("disconnections").with_columns(
+            pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+        ),
+        "assistance_liheap": load_dataset("assistance_liheap").with_columns(
+            pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+        ),
+        "assistance_utility": load_dataset("assistance_utility").with_columns(
+            pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
+        ),
+    }
+
+
+def _get_quarter_boundaries(month: int, year: int) -> tuple[datetime, datetime, int]:
+    """Get quarter start, end dates, and quarter number for a given month/year."""
+    if month <= 3:  # Q1
+        return datetime(year, 1, 1, tzinfo=UTC), datetime(year, 3, 1, tzinfo=UTC), 1
+    if month <= 6:  # Q2
+        return datetime(year, 4, 1, tzinfo=UTC), datetime(year, 6, 1, tzinfo=UTC), 2
+    if month <= 9:  # Q3
+        return datetime(year, 7, 1, tzinfo=UTC), datetime(year, 9, 1, tzinfo=UTC), 3
+    # Q4
+    return datetime(year, 10, 1, tzinfo=UTC), datetime(year, 12, 1, tzinfo=UTC), 4
+
+
+def _get_previous_quarter_boundaries(quarter_num: int, year: int) -> tuple[datetime, datetime]:
+    """Get previous quarter start and end dates."""
+    if quarter_num == 1:
+        return datetime(year - 1, 10, 1, tzinfo=UTC), datetime(year - 1, 12, 1, tzinfo=UTC)
+    prev_q_start_month = (quarter_num - 2) * 3 + 1
+    prev_q_end_month = (quarter_num - 1) * 3
+    return datetime(year, prev_q_start_month, 1, tzinfo=UTC), datetime(year, prev_q_end_month, 1, tzinfo=UTC)
+
+
+def _calculate_quarter_metrics(
+    datasets: dict[str, pl.DataFrame],
+    q_start: datetime,
+    q_end: datetime,
+    selected_utilities: list[str],
+) -> tuple[float, float, float, float]:
+    """Calculate customer count, amount, disconnections, and assistance for a quarter."""
+    # Filter datasets for the quarter
+    counts_q = datasets["arrearage_counts"].filter(
+        (pl.col("Date") >= q_start) & (pl.col("Date") <= q_end) & pl.col("Utility").is_in(selected_utilities)
+    )
+    amounts_q = datasets["arrearage_amounts"].filter(
+        (pl.col("Date") >= q_start) & (pl.col("Date") <= q_end) & pl.col("Utility").is_in(selected_utilities)
+    )
+    disconnects_q = datasets["disconnections"].filter(
+        (pl.col("Date") >= q_start) & (pl.col("Date") <= q_end) & pl.col("Utility").is_in(selected_utilities)
+    )
+    liheap_q = datasets["assistance_liheap"].filter(
+        (pl.col("Date") >= q_start) & (pl.col("Date") <= q_end) & pl.col("Utility").is_in(selected_utilities)
+    )
+    utility_assist_q = datasets["assistance_utility"].filter(
+        (pl.col("Date") >= q_start) & (pl.col("Date") <= q_end) & pl.col("Utility").is_in(selected_utilities)
+    )
+
+    # For customer counts, use the most recent month in the quarter (snapshot data)
+    max_date_in_q = counts_q.select(pl.col("Date").max()).item()
+    if max_date_in_q:
+        customers = (
+            counts_q.filter(pl.col("Date") == max_date_in_q).select(pl.col("Arrearage Customer Count").sum()).item()
+            or 0
+        )
+    else:
+        customers = 0
+
+    # For other metrics, sum across the quarter (flow data)
+    amount = amounts_q.select(pl.col("Arrearage_Amount").sum()).item() or 0.0
+    disconnects = disconnects_q.select(pl.col("Number of Disconnects").sum()).item() or 0
+    liheap = liheap_q.select(pl.col("Assistance Amount").sum()).item() or 0.0
+    utility_assist = utility_assist_q.select(pl.col("Assistance Amount").sum()).item() or 0.0
+    assist = liheap + utility_assist
+
+    return customers, amount, disconnects, assist
+
+
+def _format_comparison(current: float, previous: float, is_negative_good: bool = False) -> tuple[str, str, str]:
+    """Format comparison text, arrow, and color."""
+    if previous == 0:
+        if current == 0:
+            return "No change", "→", "#95a5a6"
+        change_text = f"+{current:,.0f}" if current < 1_000_000 else f"+${current / 1_000_000:.1f}M"
+        arrow = "↑"
+        color = "#e74c3c" if is_negative_good else "#27ae60"
+        return change_text, arrow, color
+
+    change = current - previous
+    pct_change = (change / previous) * 100
+
+    # Format change text
+    if abs(current) >= 1_000_000:
+        if change < 0:
+            change_text = f"-${abs(change) / 1_000_000:.1f}M ({pct_change:.1f}%)"
+        else:
+            change_text = f"+${change / 1_000_000:.1f}M ({pct_change:+.1f}%)"
+    elif abs(current) >= 1_000:
+        if change < 0:
+            change_text = f"-{abs(change) / 1_000:.1f}K ({pct_change:.1f}%)"
+        else:
+            change_text = f"+{change / 1_000:.1f}K ({pct_change:+.1f}%)"
+    else:
+        change_text = f"{change:+,.0f} ({pct_change:+.1f}%)"
+
+    if change > 0:
+        arrow, color = "↑", ("#e74c3c" if is_negative_good else "#27ae60")
+    elif change < 0:
+        arrow, color = "↓", ("#27ae60" if is_negative_good else "#e74c3c")
+    else:
+        arrow, color = "→", "#95a5a6"
+
+    return change_text, arrow, color
+
+
+# KPI cards callback to show statewide metrics for the most recent quarter
 @app.callback(
     Output("kpi-cards-container", "children"),
-    [
-        Input("start-month-picker", "value"),
-        Input("start-year-picker", "value"),
-        Input("end-month-picker", "value"),
-        Input("end-year-picker", "value"),
-        Input("selected-utilities-store", "data"),
-    ],
+    Input("selected-utilities-store", "data"),
 )
-def update_kpi_cards(
-    start_month: int, start_year: int, end_month: int, end_year: int, selected_utilities: list[str]
-) -> list:
-    """Update KPI cards with statewide metrics based on filters."""
-    # Convert month/year to datetime objects
-    start_date = datetime(start_year, start_month, 1, tzinfo=UTC)
-    end_date = datetime(end_year, end_month, 1, tzinfo=UTC)
-
-    # If no utilities selected, show zeros
+def update_kpi_cards(selected_utilities: list[str]) -> list:
+    """Update KPI cards with most recent quarter metrics (independent of date filters)."""
+    # If no utilities selected, use all utilities
     if not selected_utilities:
-        return build_kpi_cards(
-            total_customers_with_arrearages=0,
-            total_arrearage_amount=0.0,
-            total_disconnections=0,
-            total_bill_assistance=0.0,
-        )
+        selected_utilities = all_utilities
 
     # Load datasets
-    arrearage_counts = load_dataset("arrearage_counts").with_columns(
-        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
-    )
-    arrearage_amounts = load_dataset("arrearage_amounts").with_columns(
-        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
-    )
-    disconnections = load_dataset("disconnections").with_columns(
-        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
-    )
+    datasets = _load_kpi_datasets()
 
-    # Load assistance datasets (LIHEAP + Utility programs)
-    assistance_liheap = load_dataset("assistance_liheap").with_columns(
-        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
-    )
-    assistance_utility = load_dataset("assistance_utility").with_columns(
-        pl.date(pl.col("Year"), pl.col("Month"), 1).alias("Date")
-    )
+    # Find the most recent date across all datasets
+    max_dates = [df.select(pl.col("Date").max()).item() for df in datasets.values()]
+    most_recent_date = max(d for d in max_dates if d is not None)
 
-    # Filter by date range and utilities
-    arrearage_counts_filtered = arrearage_counts.filter(
-        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
-    )
-    arrearage_amounts_filtered = arrearage_amounts.filter(
-        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
-    )
-    disconnections_filtered = disconnections.filter(
-        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
-    )
-    assistance_liheap_filtered = assistance_liheap.filter(
-        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
-    )
-    assistance_utility_filtered = assistance_utility.filter(
-        (pl.col("Date") >= start_date) & (pl.col("Date") <= end_date) & pl.col("Utility").is_in(selected_utilities)
-    )
+    # Determine current quarter boundaries
+    current_q_start, current_q_end, quarter_num = _get_quarter_boundaries(most_recent_date.month, most_recent_date.year)
 
-    # Calculate totals
-    total_customers = arrearage_counts_filtered.select(pl.col("Arrearage Customer Count").sum()).item()
-    total_amount = arrearage_amounts_filtered.select(pl.col("Arrearage_Amount").sum()).item()
-    total_disconnects = disconnections_filtered.select(pl.col("Number of Disconnects").sum()).item()
+    # Previous quarter boundaries
+    prev_q_start, prev_q_end = _get_previous_quarter_boundaries(quarter_num, most_recent_date.year)
 
-    # Sum LIHEAP and utility assistance funds
-    total_liheap = assistance_liheap_filtered.select(pl.col("Assistance Amount").sum()).item()
-    total_utility_assist = assistance_utility_filtered.select(pl.col("Assistance Amount").sum()).item()
-    total_assist = (total_liheap or 0.0) + (total_utility_assist or 0.0)
+    # Same quarter last year boundaries
+    yoy_q_start = datetime(most_recent_date.year - 1, current_q_start.month, 1, tzinfo=UTC)
+    yoy_q_end = datetime(most_recent_date.year - 1, current_q_end.month, 1, tzinfo=UTC)
 
-    # Handle None values
-    total_customers = total_customers if total_customers is not None else 0
-    total_amount = total_amount if total_amount is not None else 0.0
-    total_disconnects = total_disconnects if total_disconnects is not None else 0
-    total_assist = total_assist if total_assist is not None else 0.0
+    # Calculate totals for all three periods
+    current_metrics = _calculate_quarter_metrics(datasets, current_q_start, current_q_end, selected_utilities)
+    prev_metrics = _calculate_quarter_metrics(datasets, prev_q_start, prev_q_end, selected_utilities)
+    yoy_metrics = _calculate_quarter_metrics(datasets, yoy_q_start, yoy_q_end, selected_utilities)
 
+    current_customers, current_amount, current_disconnects, current_assist = current_metrics
+    prev_customers, prev_amount, prev_disconnects, prev_assist = prev_metrics
+    yoy_customers, yoy_amount, yoy_disconnects, yoy_assist = yoy_metrics
+
+    # Calculate QoQ and YoY comparisons for each metric
+    customers_qoq = _format_comparison(current_customers, prev_customers, is_negative_good=True)
+    customers_yoy = _format_comparison(current_customers, yoy_customers, is_negative_good=True)
+    amount_qoq = _format_comparison(current_amount, prev_amount, is_negative_good=True)
+    amount_yoy = _format_comparison(current_amount, yoy_amount, is_negative_good=True)
+    disconnects_qoq = _format_comparison(current_disconnects, prev_disconnects, is_negative_good=True)
+    disconnects_yoy = _format_comparison(current_disconnects, yoy_disconnects, is_negative_good=True)
+    assist_qoq = _format_comparison(current_assist, prev_assist, is_negative_good=False)
+    assist_yoy = _format_comparison(current_assist, yoy_assist, is_negative_good=False)
+
+    # Format date range for display
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    start_month_name = month_names[current_q_start.month - 1]
+    end_month_name = month_names[current_q_end.month - 1]
+    date_range_text = f"Q{quarter_num} {most_recent_date.year} ({start_month_name}-{end_month_name})"
+
+    # Build metric comparison objects
     return build_kpi_cards(
-        total_customers_with_arrearages=total_customers,
-        total_arrearage_amount=total_amount,
-        total_disconnections=total_disconnects,
-        total_bill_assistance=total_assist,
+        customers=MetricComparison(
+            value=current_customers,
+            qoq_change=customers_qoq[0],
+            qoq_arrow=customers_qoq[1],
+            qoq_color=customers_qoq[2],
+            yoy_change=customers_yoy[0],
+            yoy_arrow=customers_yoy[1],
+            yoy_color=customers_yoy[2],
+        ),
+        amount=MetricComparison(
+            value=current_amount,
+            qoq_change=amount_qoq[0],
+            qoq_arrow=amount_qoq[1],
+            qoq_color=amount_qoq[2],
+            yoy_change=amount_yoy[0],
+            yoy_arrow=amount_yoy[1],
+            yoy_color=amount_yoy[2],
+        ),
+        disconnections=MetricComparison(
+            value=current_disconnects,
+            qoq_change=disconnects_qoq[0],
+            qoq_arrow=disconnects_qoq[1],
+            qoq_color=disconnects_qoq[2],
+            yoy_change=disconnects_yoy[0],
+            yoy_arrow=disconnects_yoy[1],
+            yoy_color=disconnects_yoy[2],
+        ),
+        assistance=MetricComparison(
+            value=current_assist,
+            qoq_change=assist_qoq[0],
+            qoq_arrow=assist_qoq[1],
+            qoq_color=assist_qoq[2],
+            yoy_change=assist_yoy[0],
+            yoy_arrow=assist_yoy[1],
+            yoy_color=assist_yoy[2],
+        ),
+        date_range=date_range_text,
     )
 
 

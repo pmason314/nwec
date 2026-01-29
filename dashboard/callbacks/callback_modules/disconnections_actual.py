@@ -8,6 +8,8 @@ import polars as pl
 from dash import Dash, Input, Output
 from scipy import stats
 
+from dashboard.chart_builders import create_stacked_line_chart
+
 
 def register_actual_disconnections_callbacks(
     app: Dash,
@@ -59,58 +61,18 @@ def register_actual_disconnections_callbacks(
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
         # Aggregate by date and utility
-        chart_data = (
-            filtered_df.group_by(["Date", "Utility"])
-            .agg(pl.col("Number of Disconnects").sum())
-            .sort("Date")
-            .to_pandas()
-        )
+        chart_data = filtered_df.group_by(["Date", "Utility"]).agg(pl.col("Number of Disconnects").sum()).sort("Date")
 
-        # Create figure
-        fig = go.Figure()
-
-        for utility in selected_utilities if selected_utilities else all_utilities:
-            utility_data = chart_data[chart_data["Utility"] == utility].sort_values("Date")
-            if not utility_data.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=utility_data["Date"],
-                        y=utility_data["Number of Disconnects"],
-                        name=utility,
-                        mode="lines",
-                        stackgroup="one",
-                        fillcolor=colors.get(utility, "#cccccc"),
-                        line={"width": 0.5, "color": colors.get(utility, "#cccccc")},
-                        hovertemplate=f"<b>{utility}</b><br>%{{y:,.0f}}<extra></extra>",
-                    )
-                )
-
-        fig.update_layout(
-            xaxis_title="",
-            yaxis_title="Number of Disconnected Customers",
-            legend={
-                "title": {"text": "Utility", "font": {"size": 14}},
-                "orientation": "v",
-                "yanchor": "top",
-                "y": 1,
-                "xanchor": "left",
-                "x": 1.02,
-            },
-            hovermode="x unified",
-            plot_bgcolor="white",
-            paper_bgcolor="white",
+        # Create figure using centralized chart builder
+        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        fig = create_stacked_line_chart(
+            data=chart_data,
+            utilities=utilities_to_show,
+            value_column="Number of Disconnects",
+            y_axis_title="Number of Disconnected Customers",
+            utility_colors=colors,
+            is_amount=False,
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
-            xaxis={
-                "tickformat": "%b-%y",
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-            },
-            yaxis={
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-                "tickformat": ",.0f",
-            },
         )
 
         subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"

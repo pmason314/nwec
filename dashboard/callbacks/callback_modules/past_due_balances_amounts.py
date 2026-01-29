@@ -6,6 +6,8 @@ import plotly.graph_objects as go
 import polars as pl
 from dash import Dash, Input, Output
 
+from dashboard.chart_builders import create_stacked_line_chart
+
 
 def register_amounts_callbacks(
     app: Dash,
@@ -61,55 +63,18 @@ def register_amounts_callbacks(
             filtered_df = filtered_df.filter(pl.lit(value=False))
 
         # Aggregate by date and utility
-        chart_data = (
-            filtered_df.group_by(["Date", "Utility"]).agg(pl.col("Arrearage_Amount").sum()).sort("Date").to_pandas()
-        )
+        chart_data = filtered_df.group_by(["Date", "Utility"]).agg(pl.col("Arrearage_Amount").sum()).sort("Date")
 
-        # Create figure
-        fig = go.Figure()
-
-        for utility in selected_utilities if selected_utilities else all_utilities:
-            utility_data = chart_data[chart_data["Utility"] == utility].sort_values("Date")
-            if not utility_data.empty:
-                fig.add_trace(
-                    go.Scatter(
-                        x=utility_data["Date"],
-                        y=utility_data["Arrearage_Amount"],
-                        name=utility,
-                        mode="lines",
-                        stackgroup="one",
-                        fillcolor=colors.get(utility, "#cccccc"),
-                        line={"width": 0.5, "color": colors.get(utility, "#cccccc")},
-                        hovertemplate=f"<b>{utility}</b><br>${{y:,.2f}}<extra></extra>",
-                    )
-                )
-
-        fig.update_layout(
-            xaxis_title="",
-            yaxis_title="Past-Due Balances ($USD)",
-            legend={
-                "title": {"text": "Utility", "font": {"size": 14}},
-                "orientation": "v",
-                "yanchor": "top",
-                "y": 1,
-                "xanchor": "left",
-                "x": 1.02,
-            },
-            hovermode="x unified",
-            plot_bgcolor="white",
-            paper_bgcolor="white",
+        # Create figure using centralized chart builder
+        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        fig = create_stacked_line_chart(
+            data=chart_data,
+            utilities=utilities_to_show,
+            value_column="Arrearage_Amount",
+            y_axis_title="Past-Due Balances ($USD)",
+            utility_colors=colors,
+            is_amount=True,
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
-            xaxis={
-                "tickformat": "%b-%y",
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-            },
-            yaxis={
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-                "tickformat": "$,.0f",
-            },
         )
 
         subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"

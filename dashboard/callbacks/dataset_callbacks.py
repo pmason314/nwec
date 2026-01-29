@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import polars as pl
 from dash import Dash, Input, Output
 
+from dashboard.chart_builders import create_stacked_line_chart
 from dashboard.dashboard_config import DatasetConfig, load_dataset
 
 
@@ -68,72 +69,22 @@ def create_dataset_callbacks(app: Dash, config: DatasetConfig, all_utilities: li
         # Create chart subtitle
         chart_subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
 
-        # Convert to pandas for Plotly
-        chart_df = chart_data.to_pandas()
-
-        # Create stacked area chart
-        fig = go.Figure()
-
-        colors = {"PSE": "#156570", "Avista": "#B4CEB3", "PAC": "#9B7EDE", "CNG": "#FE5F55", "NWN": "#5C415D"}
-
-        # Add traces for each utility
-        for utility in selected_utilities if selected_utilities else all_utilities:
-            utility_data = chart_df[chart_df["Utility"] == utility].sort_values("Date")
-            if not utility_data.empty:
-                hover_template = (
-                    f"<b>{utility}</b><br>${{y:,.2f}}<extra></extra>"
-                    if config.is_amount
-                    else f"<b>{utility}</b><br>%{{y:,.0f}}<extra></extra>"
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=utility_data["Date"],
-                        y=utility_data[config.value_column],
-                        name=utility,
-                        mode="lines",
-                        stackgroup="one",
-                        fillcolor=colors.get(utility, "#cccccc"),
-                        line={"width": 0.5, "color": colors.get(utility, "#cccccc")},
-                        hovertemplate=hover_template,
-                    )
-                )
-
         # Display-friendly axis title: replace 'Arrearage' with 'Past-Due Balance' for UI
         display_value_label = config.value_column.replace("Arrearage", "Past-Due Balance")
         y_axis_title = f"{display_value_label} ($)" if config.is_amount else display_value_label
-        tick_format = "$,.0f" if config.is_amount else ",.0f"
 
-        fig.update_layout(
-            xaxis_title="",
-            yaxis_title=y_axis_title,
-            legend={
-                "title": {"text": "Utility", "font": {"size": 14, "weight": 600}},
-                "orientation": "v",
-                "yanchor": "top",
-                "y": 1,
-                "xanchor": "left",
-                "x": 1.02,
-            },
-            hovermode="x unified",
-            plot_bgcolor="white",
-            paper_bgcolor="white",
+        colors = {"PSE": "#156570", "Avista": "#B4CEB3", "PAC": "#9B7EDE", "CNG": "#FE5F55", "NWN": "#5C415D"}
+
+        # Create figure using centralized chart builder
+        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        fig = create_stacked_line_chart(
+            data=chart_data,
+            utilities=utilities_to_show,
+            value_column=config.value_column,
+            y_axis_title=y_axis_title,
+            utility_colors=colors,
+            is_amount=config.is_amount,
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
-            xaxis={
-                "tickformat": "%b-%y",
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-                "gridwidth": 1,
-                "tickfont": {"size": 12},
-            },
-            yaxis={
-                "showgrid": True,
-                "gridcolor": "#e1e8ed",
-                "gridwidth": 1,
-                "tickformat": tick_format,
-                "tickfont": {"size": 12},
-            },
-            font={"family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"},
         )
 
         # Prepare table data

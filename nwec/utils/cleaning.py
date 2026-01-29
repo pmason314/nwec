@@ -106,22 +106,22 @@ def _validate_month_column(df: pl.DataFrame) -> dict[str, list[str]]:
     return errors
 
 
-def _validate_value_column(df: pl.DataFrame, value_column_name: str) -> dict[str, list[str]]:
-    """Validate the value column for negative numbers."""
-    errors = {}
+def _check_negative_values(df: pl.DataFrame, value_column_name: str) -> dict[str, list[str]]:
+    """Check the value column for negative numbers (warning only)."""
+    warnings = {}
     negative_values = df.filter(pl.col(value_column_name) < 0)
     if len(negative_values) > 0:
         count = len(negative_values)
-        errors[value_column_name] = [f"Found {count} negative values"]
-    return errors
+        warnings[value_column_name] = [f"Found {count} negative values"]
+    return warnings
 
 
 def _validate_duplicates(df: pl.DataFrame) -> dict[str, list[str]]:
     """Validate that there are no duplicate rows based on key columns.
 
     Checks for duplicates based on Utility, Year, Month, Customer Class (if present),
-    Zip Code (if present), and Vintage (if present). This catches cases where multiple 
-    rows exist for the same key combination, which could happen if data is split across 
+    Zip Code (if present), and Vintage (if present). This catches cases where multiple
+    rows exist for the same key combination, which could happen if data is split across
     quarters or reporting periods.
     """
     errors = {}
@@ -150,6 +150,31 @@ def _validate_duplicates(df: pl.DataFrame) -> dict[str, list[str]]:
     return errors
 
 
+def _handle_validation_results(
+    errors: dict[str, list[str]], warnings: dict[str, list[str]], sheet_name: str | None = None
+) -> None:
+    """Print warnings and raise errors if validation failed."""
+    sheet_info = f" (Sheet: {sheet_name})" if sheet_name else ""
+
+    # Print warnings if any
+    if warnings:
+        print(f"Data validation warnings{sheet_info}:")
+        for field, messages in warnings.items():
+            for message in messages:
+                print(f"  - {field}: {message}")
+
+    # Raise error if there are actual errors
+    if errors:
+        error_message = f"Data validation failed{sheet_info}:\n"
+        for field, messages in errors.items():
+            for message in messages:
+                error_message += f"  - {field}: {message}\n"
+        raise ValueError(error_message)
+
+    sheet_info_msg = f" for sheet '{sheet_name}'" if sheet_name else ""
+    print(f"Data validation passed with no errors{sheet_info_msg}.")
+
+
 def validate_data(df: pl.DataFrame, value_column_name: str, sheet_name: str | None = None) -> None:
     """Validate utility data and return any issues found.
 
@@ -157,11 +182,9 @@ def validate_data(df: pl.DataFrame, value_column_name: str, sheet_name: str | No
         df: Input DataFrame to validate
         value_column_name: Name of the column containing numeric values to validate
         sheet_name: Optional name of the sheet being validated (for error reporting)
-
-    Returns:
-        Dictionary mapping validation check names to lists of error messages
     """
     errors = {}
+    warnings = {}
 
     if "Utility" in df.columns:
         errors.update(_validate_utility_column(df))
@@ -176,18 +199,9 @@ def validate_data(df: pl.DataFrame, value_column_name: str, sheet_name: str | No
         errors.update(_validate_month_column(df))
 
     if value_column_name in df.columns:
-        errors.update(_validate_value_column(df, value_column_name))
+        warnings.update(_check_negative_values(df, value_column_name))
 
     # Check for duplicates based on key columns
     errors.update(_validate_duplicates(df))
 
-    if errors:
-        sheet_info = f" (Sheet: {sheet_name})" if sheet_name else ""
-        error_message = f"Data validation failed{sheet_info}:\n"
-        for field, messages in errors.items():
-            for message in messages:
-                error_message += f"  - {field}: {message}\n"
-        raise ValueError(error_message)
-
-    sheet_info = f" for sheet '{sheet_name}'" if sheet_name else ""
-    print(f"Data validation passed with no errors{sheet_info}.")
+    _handle_validation_results(errors, warnings, sheet_name)
