@@ -66,7 +66,7 @@ def register_amounts_callbacks(
         chart_data = filtered_df.group_by(["Date", "Utility"]).agg(pl.col("Arrearage_Amount").sum()).sort("Date")
 
         # Create figure using centralized chart builder
-        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        utilities_to_show = selected_utilities or all_utilities
         fig = create_stacked_line_chart(
             data=chart_data,
             utilities=utilities_to_show,
@@ -75,6 +75,7 @@ def register_amounts_callbacks(
             utility_colors=colors,
             is_amount=True,
             height=550,
+            title="Total Amount of Past-Due Balances",
         )
 
         subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
@@ -113,7 +114,7 @@ def register_amounts_callbacks(
         # Create figure
         fig = go.Figure()
 
-        for utility in selected_utilities if selected_utilities else all_utilities:
+        for utility in selected_utilities or all_utilities:
             utility_data = chart_data[chart_data["Utility"] == utility].sort_values("Year")
             if not utility_data.empty:
                 fig.add_trace(
@@ -143,7 +144,7 @@ def register_amounts_callbacks(
             plot_bgcolor="white",
             paper_bgcolor="white",
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
+            margin={"l": 60, "r": 140, "t": 60, "b": 60},
             xaxis={
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
@@ -153,6 +154,12 @@ def register_amounts_callbacks(
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
                 "tickformat": "$,.0f",
+            },
+            title={
+                "text": "Past-Due Balances by Utility in March of Each Year",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
             },
         )
 
@@ -210,7 +217,7 @@ def register_amounts_callbacks(
         # Create figure
         fig = go.Figure()
 
-        for utility in selected_utilities if selected_utilities else all_utilities:
+        for utility in selected_utilities or all_utilities:
             utility_data = chart_data[chart_data["Utility"] == utility].sort_values("Year")
             if not utility_data.empty:
                 fig.add_trace(
@@ -240,7 +247,7 @@ def register_amounts_callbacks(
             plot_bgcolor="white",
             paper_bgcolor="white",
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
+            margin={"l": 60, "r": 140, "t": 60, "b": 60},
             xaxis={
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
@@ -250,6 +257,12 @@ def register_amounts_callbacks(
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
                 "tickformat": "$,.2f",
+            },
+            title={
+                "text": "Average Past-Due Balance by Utility in March of Each Year",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
             },
         )
 

@@ -76,7 +76,7 @@ def create_dataset_callbacks(app: Dash, config: DatasetConfig, all_utilities: li
         colors = {"PSE": "#156570", "Avista": "#B4CEB3", "PAC": "#9B7EDE", "CNG": "#FE5F55", "NWN": "#5C415D"}
 
         # Create figure using centralized chart builder
-        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        utilities_to_show = selected_utilities or all_utilities
         fig = create_stacked_line_chart(
             data=chart_data,
             utilities=utilities_to_show,

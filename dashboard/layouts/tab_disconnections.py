@@ -84,6 +84,28 @@ def create_disconnections_tab() -> dcc.Tab:
                         ],
                         style=card_style,
                     ),
+                    # Chart 1.2: Individual utility trendlines
+                    html.Div(
+                        [
+                            html.H3(
+                                "Disconnections - Individual Utility Trends",
+                                style=title_style,
+                            ),
+                            html.P(
+                                id="disc-individual-subtitle",
+                                style=subtitle_style,
+                            ),
+                            dcc.Loading(
+                                type="default",
+                                color="#156570",
+                                children=dcc.Graph(
+                                    id="disc-individual-trendlines",
+                                    config={"displayModeBar": True},
+                                ),
+                            ),
+                        ],
+                        style=card_style,
+                    ),
                     # Chart 2: Total disconnections with trendline
                     html.Div(
                         [

@@ -69,7 +69,7 @@ def register_counts_callbacks(
         )
 
         # Create figure using centralized chart builder
-        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        utilities_to_show = selected_utilities or all_utilities
         fig = create_stacked_line_chart(
             data=chart_data,
             utilities=utilities_to_show,
@@ -78,6 +78,7 @@ def register_counts_callbacks(
             utility_colors=colors,
             is_amount=False,
             height=550,
+            title="Number of Customers with Past-Due Balances by Utility",
         )
 
         subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
@@ -153,7 +154,7 @@ def register_counts_callbacks(
         )
 
         # Create subplots
-        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        utilities_to_show = selected_utilities or all_utilities
         n_utilities = len(utilities_to_show)
 
         # Arrange in grid (2 or 3 columns)
@@ -230,6 +231,12 @@ def register_counts_callbacks(
             plot_bgcolor="white",
             paper_bgcolor="white",
             margin={"l": 60, "r": 40, "t": 60, "b": 40},
+            title={
+                "text": "Number of Customers with Past-Due Balances - Individual Utility Trends",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
+            },
         )
 
         subtitle = f"{start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"

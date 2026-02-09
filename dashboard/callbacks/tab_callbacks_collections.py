@@ -38,6 +38,7 @@ def create_collections_callbacks(app: "Dash") -> None:
         y_axis_title=y_axis_title,
         is_amount=False,
         height=500,
+        title="Number of Customers Referred to Collection Agencies by Utility",
     )
 
     # Data table

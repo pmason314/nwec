@@ -81,9 +81,7 @@ def register_funding_callbacks(
                     y=utility_data["Assistance Amount"].to_list(),
                     name=utility,
                     marker_color=utility_colors.get(utility, "#156570"),
-                    hovertemplate=f"<b>{utility}</b><br>"
-                     "Date: %{x|%b %Y}<br>"
-                     "Amount: $%{y:,.0f}<extra></extra>",
+                    hovertemplate=f"<b>{utility}</b><br>Date: %{{x|%b %Y}}<br>Amount: $%{{y:,.0f}}<extra></extra>",
                 )
             )
 
@@ -95,6 +93,12 @@ def register_funding_callbacks(
             legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
             template="plotly_white",
             height=500,
+            title={
+                "text": "Distributed Bill Assistance Dollars from LIHEAP",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
+            },
         )
 
         total_amount = grouped_df["Assistance Amount"].sum()
@@ -162,9 +166,7 @@ def register_funding_callbacks(
                     y=utility_data["Assistance Amount"].to_list(),
                     name=utility,
                     marker_color=utility_colors.get(utility, "#156570"),
-                    hovertemplate=f"<b>{utility}</b><br>"
-                     "Date: %{x|%b %Y}<br>"
-                     "Amount: $%{y:,.0f}<extra></extra>",
+                    hovertemplate=f"<b>{utility}</b><br>Date: %{{x|%b %Y}}<br>Amount: $%{{y:,.0f}}<extra></extra>",
                 )
             )
 
@@ -176,6 +178,12 @@ def register_funding_callbacks(
             legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
             template="plotly_white",
             height=500,
+            title={
+                "text": "Distributed Bill Assistance Dollars from Utility Programs",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
+            },
         )
 
         total_amount = grouped_df["Assistance Amount"].sum()

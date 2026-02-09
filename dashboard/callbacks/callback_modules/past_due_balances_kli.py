@@ -106,7 +106,7 @@ def register_kli_callbacks(
 
         fig.update_layout(
             barmode="stack",
-            xaxis_title="",
+            xaxis_title="Date",
             yaxis_title="Past-Due Balance ($USD)",
             legend={
                 "title": {"text": "Days Past Due", "font": {"size": 14}},
@@ -120,7 +120,7 @@ def register_kli_callbacks(
             plot_bgcolor="white",
             paper_bgcolor="white",
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
+            margin={"l": 60, "r": 140, "t": 60, "b": 60},
             xaxis={
                 "tickformat": "%b-%y",
                 "showgrid": True,
@@ -130,6 +130,12 @@ def register_kli_callbacks(
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
                 "tickformat": "$,.0f",
+            },
+            title={
+                "text": "Low-Income Past-Due Balances by Days Past Due",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
             },
         )
 
@@ -195,7 +201,7 @@ def register_kli_callbacks(
             plot_bgcolor="white",
             paper_bgcolor="white",
             height=550,
-            margin={"l": 60, "r": 60, "t": 20, "b": 60},
+            margin={"l": 60, "r": 60, "t": 60, "b": 60},
             showlegend=True,
             legend={
                 "orientation": "v",
@@ -203,6 +209,12 @@ def register_kli_callbacks(
                 "y": 1,
                 "xanchor": "left",
                 "x": 1.02,
+            },
+            title={
+                "text": "Percentage of Low-Income Past-Due Balances by Days Past Due",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
             },
         )
 
@@ -273,7 +285,7 @@ def register_kli_callbacks(
             plot_bgcolor="white",
             paper_bgcolor="white",
             height=550,
-            margin={"l": 60, "r": 140, "t": 20, "b": 60},
+            margin={"l": 60, "r": 140, "t": 60, "b": 60},
             xaxis={
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
@@ -283,6 +295,12 @@ def register_kli_callbacks(
                 "showgrid": True,
                 "gridcolor": "#e1e8ed",
                 "tickformat": "$,.0f",
+            },
+            title={
+                "text": "Low-Income Past-Due Balances by Days Past Due in March",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
             },
         )
 

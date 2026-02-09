@@ -22,6 +22,7 @@ def create_stacked_line_chart(
     utility_colors: dict[str, str],
     is_amount: bool = False,
     height: int = 550,
+    title: str | None = None,
 ) -> go.Figure:
     """Create standardized stacked line chart.
 
@@ -33,6 +34,7 @@ def create_stacked_line_chart(
         utility_colors: Dictionary mapping utility names to colors
         is_amount: Whether values are currency amounts
         height: Chart height in pixels
+        title: Optional chart title
 
     Returns:
         Plotly Figure object
@@ -61,6 +63,12 @@ def create_stacked_line_chart(
     # Apply layout
     layout = get_line_chart_layout(y_axis_title, height, is_amount)
     fig.update_layout(layout)
+
+    # Add title if provided
+    if title:
+        fig.update_layout(
+            title={"text": title, "x": 0.5, "xanchor": "center", "font": {"size": 18, "color": "#2c3e50"}}
+        )
 
     return fig
 

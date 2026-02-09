@@ -78,7 +78,16 @@ def create_past_due_balances_tab() -> dcc.Tab:
                                 color="#156570",
                                 children=dcc.Graph(
                                     id="pdb-counts-stacked-line",
-                                    config={"displayModeBar": True},
+                                    config={
+                                        "displayModeBar": True,
+                                        "toImageButtonOptions": {
+                                            "format": "png",
+                                            "filename": "customers_past_due_balances",
+                                            "height": 600,
+                                            "width": 1200,
+                                            "scale": 2,
+                                        },
+                                    },
                                 ),
                             ),
                         ],

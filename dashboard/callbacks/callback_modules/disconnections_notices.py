@@ -64,7 +64,7 @@ def register_disconnection_notices_callbacks(
         )
 
         # Create figure using centralized chart builder
-        utilities_to_show = selected_utilities if selected_utilities else all_utilities
+        utilities_to_show = selected_utilities or all_utilities
         fig = create_stacked_line_chart(
             data=chart_data,
             utilities=utilities_to_show,
@@ -73,6 +73,7 @@ def register_disconnection_notices_callbacks(
             utility_colors=colors,
             is_amount=False,
             height=550,
+            title="Number of Customers Receiving Disconnection Notices by Utility",
         )
 
         subtitle = f"Showing data from {start_date.strftime('%B %Y')} to {end_date.strftime('%B %Y')}"
