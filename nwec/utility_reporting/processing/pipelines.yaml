@@ -15,9 +15,9 @@ pipelines:
     core_value_column_name: "Reconnection Fee Amount"
     processed_file_name: "reconnection_fees"
 
-  - sheet_name: "Disconnect Fees"
-    core_value_column_name: "Disconnection Fee Amount"
-    processed_file_name: "disconnection_fees"
+  # - sheet_name: "Disconnect Fees"
+  #   core_value_column_name: "Disconnection Fee Amount"
+  #   processed_file_name: "disconnection_fees"
 
   - sheet_name: "No. of Customers w TPAs"
     core_value_column_name: "Payment Agreement Customer Count"
