@@ -48,6 +48,9 @@ def run_full_pipeline(pipeline: Pipeline) -> None:
     else:
         combined_assistance = df
 
+    # Sort by all columns to ensure consistent output order
+    combined_assistance = combined_assistance.sort(combined_assistance.columns)
+
     processed_path.unlink(missing_ok=True)
     combined_assistance.write_ipc(processed_path)
     combined_assistance.write_csv(processed_path.with_suffix(".csv"))

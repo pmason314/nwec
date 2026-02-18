@@ -179,7 +179,7 @@ def get_line_chart_layout(
     layout = {
         **CHART_LAYOUT_DEFAULTS,
         "height": height,
-        "xaxis_title": "Month",
+        "xaxis_title": "Date",
         "yaxis_title": y_axis_title,
     }
 

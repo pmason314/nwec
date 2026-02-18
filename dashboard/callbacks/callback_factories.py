@@ -35,6 +35,7 @@ def create_stacked_line_callback(
     y_axis_title: str,
     is_amount: bool = False,
     height: int = 550,
+    title: str | None = None,
 ) -> None:
     """Factory to create stacked line chart callback.
 
@@ -47,6 +48,7 @@ def create_stacked_line_callback(
         y_axis_title: Title for y-axis
         is_amount: Whether values are currency amounts
         height: Chart height in pixels
+        title: Optional chart title
     """
 
     @app.callback(
@@ -86,6 +88,7 @@ def create_stacked_line_callback(
             utility_colors=UTILITY_COLORS,
             is_amount=is_amount,
             height=height,
+            title=title,
         )
 
         # Generate subtitle

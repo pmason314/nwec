@@ -54,7 +54,6 @@ app = Dash(
     title="Energy Affordability Dashboard",
     assets_folder=str(assets_path),
 )
-server = app.server  # Expose the server for deployment
 
 # Build available_months_by_year from all datasets
 available_years = sorted(all_years_set)
@@ -451,6 +450,9 @@ def update_kpi_cards(selected_utilities: list[str]) -> list:
         date_range=date_range_text,
     )
 
+
+# Expose the server for deployment (MUST be after all callbacks are registered in Dash 4.0+)
+server = app.server
 
 if __name__ == "__main__":
     # Run with `uv run --env-file .env gunicorn app:server -b 127.0.0.1:8080 -w 1` for production

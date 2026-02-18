@@ -16,7 +16,7 @@ requires-python = ">=3.13"
 
 dependencies = [
     "beautifulsoup4>=4.12.3",
-    "dash>=2.18.2",
+    "dash~=3.4",
     "fastexcel>=0.11.6",
     "gunicorn>=23.0.0",
     "nbformat>=5.10.4",
@@ -84,7 +84,8 @@ unfixable = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"dashboard/callbacks/**" = ["C901", "PLR0915"] # Ignore statement count in callbacks
+"dashboard/callbacks/**"                    = ["C901", "PLR0915"] # Ignore statement count in callbacks
+"dashboard/callbacks/callback_factories.py" = ["PLR0913"]         # Allow 9 arguments
 
 [tool.ruff.lint.pylint]
 max-args = 8
@@ -114,3 +115,6 @@ sections = ["project.dependencies"]
 
 [tool.ty.terminal]
 output-format = "concise"
+
+[tool.ty.rules]
+possibly-missing-attribute = "ignore"

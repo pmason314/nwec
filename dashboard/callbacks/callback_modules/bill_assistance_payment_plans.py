@@ -80,6 +80,7 @@ def register_payment_plans_callbacks(
             utility_colors=utility_colors,
             is_amount=False,
             height=500,
+            title="Number of Customers with Payment Arrangements by Utility",
         )
 
         # Create subtitle
@@ -223,7 +224,13 @@ def register_payment_plans_callbacks(
             showlegend=False,
             plot_bgcolor="white",
             paper_bgcolor="white",
-            margin={"l": 60, "r": 30, "t": 50, "b": 60},
+            margin={"l": 60, "r": 30, "t": 60, "b": 60},
+            title={
+                "text": "Payment Arrangements - Individual Utility Trends",
+                "x": 0.5,
+                "xanchor": "center",
+                "font": {"size": 18, "color": "#2c3e50"},
+            },
         )
 
         fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#e1e8ed")

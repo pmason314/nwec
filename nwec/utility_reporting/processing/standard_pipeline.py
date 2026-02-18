@@ -82,6 +82,9 @@ def run_full_pipeline(pipeline: Pipeline) -> None:
     else:
         combined_payment_agreements = df
 
+    # Sort by all columns to ensure consistent output order
+    combined_payment_agreements = combined_payment_agreements.sort(combined_payment_agreements.columns)
+
     processed_path.unlink(missing_ok=True)
     combined_payment_agreements.write_ipc(processed_path)
     combined_payment_agreements.write_csv(processed_path.with_suffix(".csv"))
