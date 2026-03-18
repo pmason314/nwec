@@ -65,6 +65,8 @@ Puget Sound Energy (pse)
 Avista and CNG have the whole year
 NWN, PAC, and PSE only have Q4
 
-# Hi Charlee
-
+# Running the Dashboard
+```bash
+cd ~/nwec && git pull && uv sync && uv run --env-file .env gunicorn --chdir dashboard app:server -b 0.0.0.0:8080 -w 1 --daemon
+```
 
